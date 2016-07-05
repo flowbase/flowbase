@@ -66,7 +66,6 @@ func (proc *SinkString) Run() {
 			default:
 			}
 		}
-		Debug.Printf("Finished looping\n")
 	}
 }
 
