@@ -36,3 +36,40 @@ func (proc *Sink) Run() {
 func (proc *Sink) deleteInPortAtKey(i int) {
 	proc.inPorts = append(proc.inPorts[:i], proc.inPorts[i+1:]...)
 }
+
+type SinkString struct {
+	Process
+	inPorts []chan string
+}
+
+// Instantiate a SinkString component
+func NewSinkString() (s *SinkString) {
+	return &SinkString{}
+}
+
+func (proc *SinkString) Connect(ch chan string) {
+	proc.inPorts = append(proc.inPorts, ch)
+}
+
+// Execute the SinkString component
+func (proc *SinkString) Run() {
+	for len(proc.inPorts) > 0 {
+		for i, ich := range proc.inPorts {
+			select {
+			case str, ok := <-ich:
+				Debug.Printf("Received string in sink: %s\n", str)
+				if !ok {
+					Debug.Println("Port was not ok!")
+					proc.deleteInPortAtKey(i)
+					continue
+				}
+			default:
+			}
+		}
+		Debug.Printf("Finished looping\n")
+	}
+}
+
+func (proc *SinkString) deleteInPortAtKey(i int) {
+	proc.inPorts = append(proc.inPorts[:i], proc.inPorts[i+1:]...)
+}
