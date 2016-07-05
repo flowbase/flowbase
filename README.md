@@ -1,7 +1,7 @@
 FlowBase
 ========
 
-A Flow-based Programming like pattern and micro-framework for Go (Golang).
+A Flow-based Programming micro-framework for Go (Golang).
 
 Libraries based on FlowBase
 ---------------------------
