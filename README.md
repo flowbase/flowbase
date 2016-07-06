@@ -10,6 +10,28 @@ The pattern has previously been described in the following blog posts on [Gopher
 - [Patterns for composable concurrent pipelines in Go](https://blog.gopheracademy.com/composable-pipelines-pattern/)
 - [Composable Pipelines Improved](https://blog.gopheracademy.com/advent-2015/composable-pipelines-improvements/)
 
+
+Usage
+-----
+
+```
+go get github.com/flowbase/flowbase/...
+```
+
+(The ellipsis, `...`, is important, to get the `flowbase` commandline tool as well)
+
+Usage
+-----
+
+Create a new FlowBase component stub:
+
+```bash
+flowbase new-component MyComponentName
+```
+
+(More helper commands coming later ...)
+
+
 Libraries based on FlowBase
 ---------------------------
 
