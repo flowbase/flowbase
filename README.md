@@ -1,7 +1,9 @@
 FlowBase
 ========
 
-A Flow-based Programming micro-framework for Go (Golang).
+A Flow-based Programming (FBP) micro-framework for Go (Golang).
+
+The aim of FlowBase, as opposed to being a full-blown framework, is to provide just enough functionality on top of the existing FBP-like primives in Golang (channels with bounded buffers, asynchronous go-routines), to enable developing data processing applications with it. Thus the term "FBP micro-framework".
 
 Libraries based on FlowBase
 ---------------------------
@@ -17,3 +19,10 @@ The pattern has previously been described in the following blog posts on [Gopher
 
 - [Patterns for composable concurrent pipelines in Go](https://blog.gopheracademy.com/composable-pipelines-pattern/)
 - [Composable Pipelines Improved](https://blog.gopheracademy.com/advent-2015/composable-pipelines-improvements/)
+
+See also
+--------
+
+Other FBP frameworks in Go:
+- [GoFlow](https://github.com/trustmaster/goflow)
+- [Cascades](https://github.com/cascades-fbp/cascades)
