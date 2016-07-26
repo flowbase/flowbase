@@ -46,7 +46,7 @@ References
 - [FBP Wikipedia article](en.wikipedia.org/wiki/Flow-based_programming)
 - [FBP google group](https://groups.google.com/forum/#!forum/flow-based-programming)
 
-See also
+Other Go FBP frameworks
 --------
 
 - [GoFlow](https://github.com/trustmaster/goflow)
