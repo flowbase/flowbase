@@ -19,11 +19,14 @@ func (proc *Sink) Connect(ch chan interface{}) {
 // Execute the Sink component
 func (proc *Sink) Run() {
 	ok := true
+	Debug.Printf("Length of inPorts: %d\n", len(proc.inPorts))
 	for len(proc.inPorts) > 0 {
 		for i, ich := range proc.inPorts {
 			select {
 			case _, ok = <-ich:
+				Debug.Printf("Received on in-port %d in sink\n", i)
 				if !ok {
+					Debug.Printf("Port on  %d not ok, in sink\n", i)
 					proc.deleteInPortAtKey(i)
 					continue
 				}
@@ -34,6 +37,7 @@ func (proc *Sink) Run() {
 }
 
 func (proc *Sink) deleteInPortAtKey(i int) {
+	Debug.Println("Deleting inport at key", i, "in sink")
 	proc.inPorts = append(proc.inPorts[:i], proc.inPorts[i+1:]...)
 }
 

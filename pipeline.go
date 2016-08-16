@@ -39,12 +39,11 @@ func (pl *PipelineRunner) Run() {
 		os.Exit(1)
 	}
 	for i, proc := range pl.processes {
-		Debug.Printf("PipelineRunner: Looping over process %d: %v ...\n", i, proc)
 		if i < len(pl.processes)-1 {
-			Debug.Printf("PipelineRunner: Starting process %d in new go-routine: %v\n", i, proc)
+			Debug.Printf("PipelineRunner: Starting process %d of type %v: in new go-routine...\n", i, reflect.TypeOf(proc))
 			go proc.Run()
 		} else {
-			Debug.Printf("PipelineRunner: Starting process %d: in main go-routine: %v\n", i, proc)
+			Debug.Printf("PipelineRunner: Starting process %d of type %v: in main go-routine...\n", i, reflect.TypeOf(proc))
 			proc.Run()
 		}
 	}
