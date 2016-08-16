@@ -2,17 +2,17 @@ package flowbase
 
 type Sink struct {
 	Process
-	inPorts []chan *interface{}
+	inPorts []chan interface{}
 }
 
 // Instantiate a Sink component
-func NewSink() (s *Sink) {
+func NewSink() *Sink {
 	return &Sink{
-		inPorts: make([]chan *interface{}, BUFSIZE),
+		inPorts: []chan interface{}{},
 	}
 }
 
-func (proc *Sink) Connect(ch chan *interface{}) {
+func (proc *Sink) Connect(ch chan interface{}) {
 	proc.inPorts = append(proc.inPorts, ch)
 }
 
@@ -44,7 +44,9 @@ type SinkString struct {
 
 // Instantiate a SinkString component
 func NewSinkString() (s *SinkString) {
-	return &SinkString{}
+	return &SinkString{
+		inPorts: []chan string{},
+	}
 }
 
 func (proc *SinkString) Connect(ch chan string) {
