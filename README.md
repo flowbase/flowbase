@@ -47,7 +47,15 @@ References
 - [FBP google group](https://groups.google.com/forum/#!forum/flow-based-programming)
 
 Other Go FBP frameworks
---------
+-----------------------
 
-- [GoFlow](https://github.com/trustmaster/goflow)
+- [GoFlow](https://github.com/trustmaster/goflow) - The true and original Go FBP framework
 - [Cascades](https://github.com/cascades-fbp/cascades)
+
+Even more Go FBP (like) frameworks
+----------------------------------
+
+Seemingly less mature and/or well-known...
+
+- [Ryan Peach's GoFlow](https://github.com/ryanpeach/goflow)
+- [go-flow](https://github.com/7ing/go-flow)
