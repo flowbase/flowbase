@@ -11,7 +11,7 @@ The pattern has previously been described in the following blog posts on [Gopher
 - [Composable Pipelines Improved](https://blog.gopheracademy.com/advent-2015/composable-pipelines-improvements/)
 
 
-Usage
+Installations
 -----
 
 ```
@@ -31,6 +31,10 @@ flowbase new-component MyComponentName
 
 (More helper commands coming later ...)
 
+Code examples
+-------------
+
+For a real-world example, see [this code defining an app to transform from semantic RDF data to wiki pages in MediaWiki XML format](https://github.com/rdfio/rdf2smw/blob/e7e2b39c889bd68bfdc7d1f7ed507755c4435900/main.go#L100-L125) (the network connection code is highlighted, to help you find the interesting parts quick :) ).
 
 Libraries based on FlowBase
 ---------------------------
