@@ -1,8 +1,11 @@
 package flowbase
 
 import (
-	"github.com/stretchr/testify/assert"
+	"fmt"
+	"testing"
 	t "testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAddProcesses(t *t.T) {
@@ -49,9 +52,55 @@ func ExamplePrintProcesses() {
 	// Process 1: *flowbase.BogusProcess
 }
 
+func TestNetworkWithPortObjects(t *testing.T) {
+	net := NewNet()
+	rs := NewRandomSender()
+	sp := NewStringPrinter()
+	sp.InStrings.From(rs.OutRandomStrings)
+	net.AddProcesses(rs, sp)
+	net.Run()
+}
+
 // --------------------------------
 // Helper stuff
 // --------------------------------
+
+type RandomSender struct {
+	OutRandomStrings *OutPort[string]
+}
+
+func NewRandomSender() *RandomSender {
+	return &RandomSender{NewOutPort[string]("random-strings")}
+}
+
+func (p *RandomSender) Ready() bool {
+	return p.OutRandomStrings.ready
+}
+
+func (p *RandomSender) Run() {
+	for _, str := range []string{"abc", "xyz", "urg"} {
+		p.OutRandomStrings.Send(str)
+	}
+	p.OutRandomStrings.Close()
+}
+
+type StringPrinter struct {
+	InStrings *InPort[string]
+}
+
+func NewStringPrinter() *StringPrinter {
+	return &StringPrinter{NewInPort[string]("strings")}
+}
+
+func (p *StringPrinter) Ready() bool {
+	return p.InStrings.ready
+}
+
+func (p *StringPrinter) Run() {
+	for str := range p.InStrings.Chan {
+		fmt.Println(str)
+	}
+}
 
 // A process with does just satisfy the Process interface, without doing any
 // actual work.
