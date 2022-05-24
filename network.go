@@ -7,44 +7,44 @@ import (
 )
 
 type Net struct {
-	processes []Process
+	nodes []Node
 }
 
 func NewNet() *Net {
 	return &Net{}
 }
 
-func (pl *Net) AddProcess(proc Process) {
-	pl.processes = append(pl.processes, proc)
+func (net *Net) AddNode(node Node) {
+	net.nodes = append(net.nodes, node)
 }
 
-func (pl *Net) AddProcesses(procs ...Process) {
-	for _, proc := range procs {
-		pl.AddProcess(proc)
+func (net *Net) AddNodes(nodes ...Node) {
+	for _, node := range nodes {
+		net.AddNode(node)
 	}
 }
 
-func (pl *Net) PrintProcesses() {
-	for i, proc := range pl.processes {
-		fmt.Printf("Process %d: %v\n", i, reflect.TypeOf(proc))
+func (net *Net) PrintProcesses() {
+	for i, node := range net.nodes {
+		fmt.Printf("Node %d: %v\n", i, reflect.TypeOf(node))
 	}
 }
 
-func (pl *Net) Run() {
+func (net *Net) Run() {
 	if !LogExists {
 		InitLogAudit()
 	}
-	if len(pl.processes) == 0 {
-		Error.Println("Net: The Net is empty. Did you forget to add the processes to it?")
+	if len(net.nodes) == 0 {
+		Error.Println("Net: The Net is empty. Did you forget to add the nodes to it?")
 		os.Exit(1)
 	}
-	for i, proc := range pl.processes {
-		if i < len(pl.processes)-1 {
-			Debug.Printf("Net: Starting process %d of type %v: in new go-routine...\n", i, reflect.TypeOf(proc))
-			go proc.Run()
+	for i, node := range net.nodes {
+		if i < len(net.nodes)-1 {
+			Debug.Printf("Net: Starting node %d of type %v: in new go-routine...\n", i, reflect.TypeOf(node))
+			go node.Run()
 		} else {
-			Debug.Printf("Net: Starting process %d of type %v: in main go-routine...\n", i, reflect.TypeOf(proc))
-			proc.Run()
+			Debug.Printf("Net: Starting node %d of type %v: in main go-routine...\n", i, reflect.TypeOf(node))
+			node.Run()
 		}
 	}
 }

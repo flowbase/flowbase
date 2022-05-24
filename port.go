@@ -10,12 +10,12 @@ import (
 // --------------------------------------------------------------------------------
 
 // InPort represents a pluggable connection to multiple out-ports from other
-// processes, from its own process, and with which it is communicating via
+// nodes, from its own process, and with which it is communicating via
 // channels under the hood
 type InPort[T any] struct {
 	Chan        chan T
 	name        string
-	process     Process
+	process     Node
 	RemotePorts map[string]*OutPort[T]
 	ready       bool
 	closeLock   sync.Mutex
@@ -116,11 +116,11 @@ func (pt *InPort[T]) Fail(msg interface{}) {
 // --------------------------------------------------------------------------------
 
 // OutPort represents a pluggable connection to multiple in-ports from other
-// processes, from its own process, and with which it is communicating via
+// nodes, from its own process, and with which it is communicating via
 // channels under the hood
 type OutPort[T any] struct {
 	name        string
-	process     Process
+	process     Node
 	RemotePorts map[string]*InPort[T]
 	ready       bool
 }

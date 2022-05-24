@@ -8,18 +8,18 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAddProcesses(t *t.T) {
+func TestAddNodes(t *t.T) {
 	InitLogError()
 
 	proc1 := NewBogusProcess()
 	proc2 := NewBogusProcess()
 	pipeline := NewNet()
-	pipeline.AddProcesses(proc1, proc2)
+	pipeline.AddNodes(proc1, proc2)
 
-	assert.EqualValues(t, len(pipeline.processes), 2)
+	assert.EqualValues(t, len(pipeline.nodes), 2)
 
-	assert.IsType(t, &BogusProcess{}, pipeline.processes[0], "Process 1 was not of the right type!")
-	assert.IsType(t, &BogusProcess{}, pipeline.processes[1], "Process 2 was not of the right type!")
+	assert.IsType(t, &BogusProcess{}, pipeline.nodes[0], "Process 1 was not of the right type!")
+	assert.IsType(t, &BogusProcess{}, pipeline.nodes[1], "Process 2 was not of the right type!")
 }
 
 func TestRunProcessesInNet(t *t.T) {
@@ -27,7 +27,7 @@ func TestRunProcessesInNet(t *t.T) {
 	proc2 := NewBogusProcess()
 
 	pipeline := NewNet()
-	pipeline.AddProcesses(proc1, proc2)
+	pipeline.AddNodes(proc1, proc2)
 	pipeline.Run()
 
 	// Only the last process is supposed to be run by the pipeline directly,
@@ -43,13 +43,13 @@ func ExamplePrintProcesses() {
 	proc2 := NewBogusProcess()
 
 	pipeline := NewNet()
-	pipeline.AddProcesses(proc1, proc2)
+	pipeline.AddNodes(proc1, proc2)
 	pipeline.Run()
 
 	pipeline.PrintProcesses()
 	// Output:
-	// Process 0: *flowbase.BogusProcess
-	// Process 1: *flowbase.BogusProcess
+	// Node 0: *flowbase.BogusProcess
+	// Node 1: *flowbase.BogusProcess
 }
 
 func TestNetworkWithPortObjects(t *testing.T) {
@@ -57,7 +57,7 @@ func TestNetworkWithPortObjects(t *testing.T) {
 	rs := NewRandomSender()
 	sp := NewStringPrinter()
 	sp.InStrings.From(rs.OutRandomStrings)
-	net.AddProcesses(rs, sp)
+	net.AddNodes(rs, sp)
 	net.Run()
 }
 
@@ -73,15 +73,19 @@ func NewRandomSender() *RandomSender {
 	return &RandomSender{NewOutPort[string]("random-strings")}
 }
 
-func (p *RandomSender) Ready() bool {
-	return p.OutRandomStrings.ready
+func (n *RandomSender) Name() string {
+	return "random-sender"
 }
 
-func (p *RandomSender) Run() {
+func (n *RandomSender) Ready() bool {
+	return n.OutRandomStrings.ready
+}
+
+func (n *RandomSender) Run() {
 	for _, str := range []string{"abc", "xyz", "urg"} {
-		p.OutRandomStrings.Send(str)
+		n.OutRandomStrings.Send(str)
 	}
-	p.OutRandomStrings.Close()
+	n.OutRandomStrings.Close()
 }
 
 type StringPrinter struct {
@@ -92,12 +96,16 @@ func NewStringPrinter() *StringPrinter {
 	return &StringPrinter{NewInPort[string]("strings")}
 }
 
-func (p *StringPrinter) Ready() bool {
-	return p.InStrings.ready
+func (n *StringPrinter) Name() string {
+	return "string-printer"
 }
 
-func (p *StringPrinter) Run() {
-	for str := range p.InStrings.Chan {
+func (n *StringPrinter) Ready() bool {
+	return n.InStrings.ready
+}
+
+func (n *StringPrinter) Run() {
+	for str := range n.InStrings.Chan {
 		fmt.Println(str)
 	}
 }
@@ -105,7 +113,7 @@ func (p *StringPrinter) Run() {
 // A process with does just satisfy the Process interface, without doing any
 // actual work.
 type BogusProcess struct {
-	Process
+	Node
 	WasRun bool
 }
 
@@ -113,8 +121,10 @@ func NewBogusProcess() *BogusProcess {
 	return &BogusProcess{WasRun: false}
 }
 
-func (p *BogusProcess) Run() {
-	p.WasRun = true
+func (n *BogusProcess) Name() string { return "bogus-process" }
+
+func (n *BogusProcess) Run() {
+	n.WasRun = true
 }
 
 func (p *BogusProcess) IsConnected() bool {

@@ -1,7 +1,7 @@
 package flowbase
 
 type Sink struct {
-	Process
+	Node
 	inPorts []chan interface{}
 }
 
@@ -12,22 +12,22 @@ func NewSink() *Sink {
 	}
 }
 
-func (proc *Sink) Connect(ch chan interface{}) {
-	proc.inPorts = append(proc.inPorts, ch)
+func (node *Sink) Connect(ch chan interface{}) {
+	node.inPorts = append(node.inPorts, ch)
 }
 
 // Execute the Sink component
-func (proc *Sink) Run() {
+func (node *Sink) Run() {
 	ok := true
-	Debug.Printf("Length of inPorts: %d\n", len(proc.inPorts))
-	for len(proc.inPorts) > 0 {
-		for i, ich := range proc.inPorts {
+	Debug.Printf("Length of inPorts: %d\n", len(node.inPorts))
+	for len(node.inPorts) > 0 {
+		for i, ich := range node.inPorts {
 			select {
 			case _, ok = <-ich:
 				Debug.Printf("Received on in-port %d in sink\n", i)
 				if !ok {
 					Debug.Printf("Port on  %d not ok, in sink\n", i)
-					proc.deleteInPortAtKey(i)
+					node.deleteInPortAtKey(i)
 					continue
 				}
 			default:
@@ -36,13 +36,13 @@ func (proc *Sink) Run() {
 	}
 }
 
-func (proc *Sink) deleteInPortAtKey(i int) {
+func (node *Sink) deleteInPortAtKey(i int) {
 	Debug.Println("Deleting inport at key", i, "in sink")
-	proc.inPorts = append(proc.inPorts[:i], proc.inPorts[i+1:]...)
+	node.inPorts = append(node.inPorts[:i], node.inPorts[i+1:]...)
 }
 
 type SinkString struct {
-	Process
+	Node
 	inPorts []chan string
 }
 
@@ -53,20 +53,20 @@ func NewSinkString() (s *SinkString) {
 	}
 }
 
-func (proc *SinkString) Connect(ch chan string) {
-	proc.inPorts = append(proc.inPorts, ch)
+func (node *SinkString) Connect(ch chan string) {
+	node.inPorts = append(node.inPorts, ch)
 }
 
 // Execute the SinkString component
-func (proc *SinkString) Run() {
-	for len(proc.inPorts) > 0 {
-		for i, ich := range proc.inPorts {
+func (node *SinkString) Run() {
+	for len(node.inPorts) > 0 {
+		for i, ich := range node.inPorts {
 			select {
 			case str, ok := <-ich:
 				Debug.Printf("Received string in sink: %s\n", str)
 				if !ok {
 					Debug.Println("Port was not ok!")
-					proc.deleteInPortAtKey(i)
+					node.deleteInPortAtKey(i)
 					continue
 				}
 			default:
@@ -75,6 +75,6 @@ func (proc *SinkString) Run() {
 	}
 }
 
-func (proc *SinkString) deleteInPortAtKey(i int) {
-	proc.inPorts = append(proc.inPorts[:i], proc.inPorts[i+1:]...)
+func (node *SinkString) deleteInPortAtKey(i int) {
+	node.inPorts = append(node.inPorts[:i], node.inPorts[i+1:]...)
 }
