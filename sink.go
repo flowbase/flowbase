@@ -28,7 +28,7 @@ func (p *Sink) Run() {
 	if p.in().Ready() {
 		go func() {
 			for ip := range p.in().Chan {
-				Debug.Printf("Got file in sink: %s\n", ip.Path())
+				Debug.Printf("Got file in sink: %s\n", ip.ID())
 			}
 			merged <- 1
 		}()

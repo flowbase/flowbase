@@ -211,9 +211,11 @@ func (pt *OutPort) Ready() bool {
 }
 
 // Send sends an FileIP to all the in-ports connected to the OutPort
-func (pt *OutPort) Send(ip *FileIP) {
+func (pt *OutPort) Send(data any) {
 	for _, rpt := range pt.RemotePorts {
 		Debug.Printf("Sending on out-port (%s) connected to in-port (%s)", pt.Name(), rpt.Name())
+		ip, err := NewFileIP(data)
+		Check(err)
 		rpt.Send(ip)
 	}
 }

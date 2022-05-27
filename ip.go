@@ -9,7 +9,6 @@ import (
 // IP Is the base interface which all other IPs need to adhere to
 type IP interface {
 	ID() string
-	FinalizePath()
 }
 
 // ------------------------------------------------------------------------
@@ -19,23 +18,19 @@ type IP interface {
 // BaseIP contains foundational functionality which all IPs need to implement.
 // It is meant to be embedded into other IP implementations.
 type BaseIP struct {
-	path      string
+	data      any
 	id        string
 	auditInfo *AuditInfo
 	tags      map[string]string
 }
 
 // NewBaseIP creates a new BaseIP
-func NewBaseIP(path string) *BaseIP {
+func NewBaseIP(data any) *BaseIP {
 	return &BaseIP{
-		path: path,
+		data: data,
 		id:   randSeqLC(20),
 		tags: make(map[string]string),
 	}
-}
-
-func (ip *BaseIP) Path() string {
-	return ip.path
 }
 
 // ID returns a globally unique ID for the IP
@@ -56,9 +51,9 @@ type FileIP struct {
 }
 
 // NewFileIP creates a new FileIP
-func NewFileIP(path string) (*FileIP, error) {
+func NewFileIP(data any) (*FileIP, error) {
 	ip := &FileIP{
-		BaseIP: NewBaseIP(path),
+		BaseIP: NewBaseIP(data),
 		lock:   &sync.Mutex{},
 	}
 	return ip, nil
@@ -72,7 +67,7 @@ func NewFileIP(path string) (*FileIP, error) {
 func (ip *FileIP) Tag(k string) string {
 	v, ok := ip.tags[k]
 	if !ok {
-		Warning.Printf("[FileIP:%s] No such tag: (%s)\n", ip.Path(), k)
+		Warning.Printf("[FileIP:%s] No such tag: (%s)\n", ip.ID(), k)
 		return ""
 	}
 	return v
@@ -107,5 +102,5 @@ func (ip *FileIP) Failf(msg string, parts ...interface{}) {
 }
 
 func (ip *FileIP) Fail(msg interface{}) {
-	Failf("[FileIP:%s]: %s", ip.Path(), msg)
+	Failf("[FileIP:%s]: %s", ip.ID(), msg)
 }

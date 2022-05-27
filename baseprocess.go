@@ -162,7 +162,7 @@ func (p *BaseProcess) receiveOnInPorts() (ips map[string]*FileIP, inPortsOpen bo
 			inPortsOpen = false
 			continue
 		}
-		Debug.Printf("[Process %s]: Got ip (%s) ...", p.name, ip.Path())
+		Debug.Printf("[Process %s]: Got ip (%s) ...", p.name, ip.ID())
 		ips[inpName] = ip
 	}
 	return

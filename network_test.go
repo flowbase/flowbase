@@ -3,49 +3,17 @@ package flowbase
 import (
 	"os"
 	"os/exec"
-	"reflect"
 	"sync"
 	"testing"
 )
 
 func TestSetWfName(t *testing.T) {
 	initTestLogs()
-	net := NewNetwork("TestNetwork", 16)
+	net := NewNetwork("TestNetwork")
 
 	expectedWfName := "TestNetwork"
 	if net.name != expectedWfName {
 		t.Errorf("Network name is wrong, should be %s but is %s\n", net.name, expectedWfName)
-	}
-}
-
-func TestMaxConcurrentTasksCapacity(t *testing.T) {
-	initTestLogs()
-	net := NewNetwork("TestNetwork", 16)
-
-	if cap(net.concurrentTasks) != 16 {
-		t.Error("Wrong number of concurrent tasks")
-	}
-}
-
-func TestAddProc(t *testing.T) {
-	initTestLogs()
-
-	net := NewNetwork("TestAddProcsWf", 16)
-
-	proc1 := NewBogusProcess("bogusproc1")
-	net.AddProc(proc1)
-	proc2 := NewBogusProcess("bogusproc2")
-	net.AddProc(proc2)
-
-	if len(net.procs) != 2 {
-		t.Error("Wrong number of processes")
-	}
-
-	if !reflect.DeepEqual(reflect.TypeOf(net.procs["bogusproc1"]), reflect.TypeOf(&BogusProcess{})) {
-		t.Error("Bogusproc1 was not of the right type!")
-	}
-	if !reflect.DeepEqual(reflect.TypeOf(net.procs["bogusproc2"]), reflect.TypeOf(&BogusProcess{})) {
-		t.Error("Bogusproc2 was not of the right type!")
 	}
 }
 
