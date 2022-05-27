@@ -151,9 +151,9 @@ func (p *BaseProcess) Audit(msg interface{}) {
 	Audit.Printf("[Process:%s] %s"+"\n", p.Name(), msg)
 }
 
-func (p *BaseProcess) receiveOnInPorts() (ips map[string]*FileIP, inPortsOpen bool) {
+func (p *BaseProcess) receiveOnInPorts() (ips map[string]*Packet, inPortsOpen bool) {
 	inPortsOpen = true
-	ips = make(map[string]*FileIP)
+	ips = make(map[string]*Packet)
 	// Read input IPs on in-ports and set up path mappings
 	for inpName, inPort := range p.InPorts() {
 		Debug.Printf("[Process %s]: Receieving on inPort (%s) ...", p.name, inpName)

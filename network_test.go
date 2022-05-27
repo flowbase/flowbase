@@ -23,10 +23,10 @@ func TestSetWfName(t *testing.T) {
 
 type MapToTags struct {
 	BaseProcess
-	mapFunc func(ip *FileIP) map[string]string
+	mapFunc func(ip *Packet) map[string]string
 }
 
-func NewMapToTags(net *Network, name string, mapFunc func(ip *FileIP) map[string]string) *MapToTags {
+func NewMapToTags(net *Network, name string, mapFunc func(ip *Packet) map[string]string) *MapToTags {
 	p := &MapToTags{
 		BaseProcess: NewBaseProcess(net, name),
 		mapFunc:     mapFunc,
@@ -79,10 +79,7 @@ func (p *FileSource) Out() *OutPort { return p.OutPort("out") }
 func (p *FileSource) Run() {
 	defer p.CloseOutPorts()
 	for _, filePath := range p.filePaths {
-		newIP, err := NewFileIP(filePath)
-		if err != nil {
-			p.Fail(err)
-		}
+		newIP := NewPacket(filePath)
 		p.Out().Send(newIP)
 	}
 }

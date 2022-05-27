@@ -13,7 +13,7 @@ import (
 // processes, from its own process, and with which it is communicating via
 // channels under the hood
 type InPort struct {
-	Chan        chan *FileIP
+	Chan        chan *Packet
 	name        string
 	process     Node
 	RemotePorts map[string]*OutPort
@@ -26,7 +26,7 @@ func NewInPort(name string) *InPort {
 	inp := &InPort{
 		name:        name,
 		RemotePorts: map[string]*OutPort{},
-		Chan:        make(chan *FileIP, getBufsize()), // This one will contain merged inputs from inChans
+		Chan:        make(chan *Packet, getBufsize()), // This one will contain merged inputs from inChans
 		ready:       false,
 	}
 	return inp
@@ -95,12 +95,12 @@ func (pt *InPort) Ready() bool {
 
 // Send sends IPs to the in-port, and is supposed to be called from the remote
 // (out-) port, to send to this in-port
-func (pt *InPort) Send(ip *FileIP) {
+func (pt *InPort) Send(ip *Packet) {
 	pt.Chan <- ip
 }
 
 // Recv receives IPs from the port
-func (pt *InPort) Recv() *FileIP {
+func (pt *InPort) Recv() *Packet {
 	return <-pt.Chan
 }
 
@@ -210,12 +210,11 @@ func (pt *OutPort) Ready() bool {
 	return pt.ready
 }
 
-// Send sends an FileIP to all the in-ports connected to the OutPort
+// Send sends an Packet to all the in-ports connected to the OutPort
 func (pt *OutPort) Send(data any) {
 	for _, rpt := range pt.RemotePorts {
 		Debug.Printf("Sending on out-port (%s) connected to in-port (%s)", pt.Name(), rpt.Name())
-		ip, err := NewFileIP(data)
-		Check(err)
+		ip := NewPacket(data)
 		rpt.Send(ip)
 	}
 }

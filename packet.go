@@ -1,9 +1,7 @@
 package flowbase
 
 import (
-	"bytes"
 	"fmt"
-	"sync"
 )
 
 // IP Is the base interface which all other IPs need to adhere to
@@ -12,21 +10,21 @@ type IP interface {
 }
 
 // ------------------------------------------------------------------------
-// BaseIP type
+// Packet type
 // ------------------------------------------------------------------------
 
-// BaseIP contains foundational functionality which all IPs need to implement.
+// Packet contains foundational functionality which all IPs need to implement.
 // It is meant to be embedded into other IP implementations.
-type BaseIP struct {
+type Packet struct {
 	data      any
 	id        string
 	auditInfo *AuditInfo
 	tags      map[string]string
 }
 
-// NewBaseIP creates a new BaseIP
-func NewBaseIP(data any) *BaseIP {
-	return &BaseIP{
+// NewPacket creates a new Packet
+func NewPacket(data any) *Packet {
+	return &Packet{
 		data: data,
 		id:   randSeqLC(20),
 		tags: make(map[string]string),
@@ -34,29 +32,8 @@ func NewBaseIP(data any) *BaseIP {
 }
 
 // ID returns a globally unique ID for the IP
-func (ip *BaseIP) ID() string {
+func (ip *Packet) ID() string {
 	return ip.id
-}
-
-// ------------------------------------------------------------------------
-// FileIP type
-// ------------------------------------------------------------------------
-
-// FileIP (Short for "Information Packet" in Flow-Based Programming terminology)
-// contains information and helper methods for a physical file on a normal disk.
-type FileIP struct {
-	*BaseIP
-	buffer *bytes.Buffer
-	lock   *sync.Mutex
-}
-
-// NewFileIP creates a new FileIP
-func NewFileIP(data any) (*FileIP, error) {
-	ip := &FileIP{
-		BaseIP: NewBaseIP(data),
-		lock:   &sync.Mutex{},
-	}
-	return ip, nil
 }
 
 // ------------------------------------------------------------------------
@@ -64,22 +41,22 @@ func NewFileIP(data any) (*FileIP, error) {
 // ------------------------------------------------------------------------
 
 // Tag returns the tag for the tag with key k from the IPs audit info
-func (ip *FileIP) Tag(k string) string {
+func (ip *Packet) Tag(k string) string {
 	v, ok := ip.tags[k]
 	if !ok {
-		Warning.Printf("[FileIP:%s] No such tag: (%s)\n", ip.ID(), k)
+		Warning.Printf("[Packet:%s] No such tag: (%s)\n", ip.ID(), k)
 		return ""
 	}
 	return v
 }
 
 // Tags returns the audit info's tags
-func (ip *FileIP) Tags() map[string]string {
+func (ip *Packet) Tags() map[string]string {
 	return ip.tags
 }
 
 // AddTag adds the tag k with value v
-func (ip *FileIP) AddTag(k string, v string) {
+func (ip *Packet) AddTag(k string, v string) {
 	if ip.tags[k] != "" && ip.tags[k] != v {
 		ip.Failf("Can not add value (%s) to existing tag (%s) with different value (%s)", v, k, ip.tags[k])
 	}
@@ -87,7 +64,7 @@ func (ip *FileIP) AddTag(k string, v string) {
 }
 
 // AddTags adds a map of tags to the IPs audit info
-func (ip *FileIP) AddTags(tags map[string]string) {
+func (ip *Packet) AddTags(tags map[string]string) {
 	for k, v := range tags {
 		ip.AddTag(k, v)
 	}
@@ -97,10 +74,10 @@ func (ip *FileIP) AddTags(tags map[string]string) {
 // Helper functions
 // ------------------------------------------------------------------------
 
-func (ip *FileIP) Failf(msg string, parts ...interface{}) {
+func (ip *Packet) Failf(msg string, parts ...interface{}) {
 	ip.Fail(fmt.Sprintf(msg+"\n", parts...))
 }
 
-func (ip *FileIP) Fail(msg interface{}) {
-	Failf("[FileIP:%s]: %s", ip.ID(), msg)
+func (ip *Packet) Fail(msg interface{}) {
+	Failf("[Packet:%s]: %s", ip.ID(), msg)
 }
