@@ -42,8 +42,6 @@ type WorkflowProcess interface {
 	Name() string
 	InPorts() map[string]*InPort
 	OutPorts() map[string]*OutPort
-	InParamPorts() map[string]*InParamPort
-	OutParamPorts() map[string]*OutParamPort
 	Ready() bool
 	Run()
 	Fail(interface{})
@@ -223,16 +221,6 @@ func (wf *Workflow) DotGraph() (dot string) {
 				}
 			}
 		}
-		// Parameter connections
-		for popname, pop := range p.OutParamPorts() {
-			for rpname, rp := range pop.RemotePorts {
-				if wf.PlotConf.EdgeLabels {
-					con += fmt.Sprintf(`  "%s" -> "%s" [style="dashed", taillabel="%s", headlabel="%s"];`+"\n", pop.Process().Name(), rp.Process().Name(), remToDotPtn.ReplaceAllString(popname, ""), remToDotPtn.ReplaceAllString(rpname, ""))
-				} else {
-					con += fmt.Sprintf(`  "%s" -> "%s" [style="dashed"];`+"\n", pop.Process().Name(), rp.Process().Name())
-				}
-			}
-		}
 	}
 	dot += con
 	dot += "}\n"
@@ -352,27 +340,9 @@ func (wf *Workflow) reconnectDeadEndConnections(procs map[string]WorkflowProcess
 			}
 		}
 
-		// OutParamPorts
-		for _, pop := range proc.OutParamPorts() {
-			for rppName, rpp := range pop.RemotePorts {
-				// If the remotely connected process is not among the ones to run ...
-				if rpp.Process() == nil {
-					Debug.Printf("Disconnecting in-port (%s) from out-port (%s)", rpp.Name(), pop.Name())
-					pop.Disconnect(rppName)
-				} else if _, ok := procs[rpp.Process().Name()]; !ok {
-					Debug.Printf("Disconnecting in-port (%s) from out-port (%s)", rpp.Name(), pop.Name())
-					pop.Disconnect(rppName)
-				}
-			}
-			if !pop.Ready() {
-				Debug.Printf("Connecting disconnected out-port (%s) of process (%s) to workflow sink", pop.Name(), pop.Process().Name())
-				wf.sink.FromParam(pop)
-			}
-		}
-
-		if len(proc.OutPorts()) == 0 && len(proc.OutParamPorts()) == 0 {
+		if len(proc.OutPorts()) == 0 {
 			if foundNewDriverProc {
-				wf.Failf("Found more than one process without out-ports nor out-param ports. Cannot use both as drivers (One of them being '%s'). Adapt your workflow accordingly.", proc.Name())
+				wf.Failf("Found more than one process without out-ports. Cannot use both as drivers (One of them being '%s'). Adapt your workflow accordingly.", proc.Name())
 			}
 			foundNewDriverProc = true
 			wf.driver = proc
@@ -395,12 +365,6 @@ func upstreamProcsForProc(proc WorkflowProcess) map[string]WorkflowProcess {
 		for _, rpt := range inp.RemotePorts {
 			procs[rpt.Process().Name()] = rpt.Process()
 			mergeWFMaps(procs, upstreamProcsForProc(rpt.Process()))
-		}
-	}
-	for _, pip := range proc.InParamPorts() {
-		for _, rpp := range pip.RemotePorts {
-			procs[rpp.Process().Name()] = rpp.Process()
-			mergeWFMaps(procs, upstreamProcsForProc(rpp.Process()))
 		}
 	}
 	return procs

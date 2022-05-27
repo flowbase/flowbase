@@ -12,21 +12,14 @@ func NewSink(wf *Workflow, name string) *Sink {
 		BaseProcess: NewBaseProcess(wf, name),
 	}
 	p.InitInPort(p, "sink_in")
-	p.InitInParamPort(p, "param_sink_in")
 	return p
 }
 
-func (p *Sink) in() *InPort           { return p.InPort("sink_in") }
-func (p *Sink) paramIn() *InParamPort { return p.InParamPort("param_sink_in") }
+func (p *Sink) in() *InPort { return p.InPort("sink_in") }
 
 // From connects an out-port to the sinks in-port
 func (p *Sink) From(outPort *OutPort) {
 	p.in().From(outPort)
-}
-
-// FromParam connects a param-out-port to the sinks param-in-port
-func (p *Sink) FromParam(outParamPort *OutParamPort) {
-	p.paramIn().From(outParamPort)
 }
 
 // Run runs the Sink process
@@ -40,18 +33,7 @@ func (p *Sink) Run() {
 			merged <- 1
 		}()
 	}
-	if p.paramIn().Ready() {
-		go func() {
-			for param := range p.paramIn().Chan {
-				Debug.Printf("Got param in sink: %s\n", param)
-			}
-			merged <- 1
-		}()
-	}
 	if p.in().Ready() {
-		<-merged
-	}
-	if p.paramIn().Ready() {
 		<-merged
 	}
 	close(merged)

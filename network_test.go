@@ -50,73 +50,6 @@ func TestAddProc(t *testing.T) {
 }
 
 // --------------------------------------------------------------------------------
-// CombinatoricsProcess helper process
-// --------------------------------------------------------------------------------
-
-type CombinatoricsProcess struct {
-	BaseProcess
-	name string
-	A    *OutParamPort
-	B    *OutParamPort
-	C    *OutParamPort
-}
-
-func NewCombinatoricsProcess(name string) *CombinatoricsProcess {
-	a := NewOutParamPort("a")
-	b := NewOutParamPort("b")
-	c := NewOutParamPort("c")
-	p := &CombinatoricsProcess{
-		A:    a,
-		B:    b,
-		C:    c,
-		name: name,
-	}
-	a.process = p
-	b.process = p
-	c.process = p
-	return p
-}
-
-func (p *CombinatoricsProcess) InPorts() map[string]*InPort {
-	return map[string]*InPort{}
-}
-func (p *CombinatoricsProcess) OutPorts() map[string]*OutPort {
-	return map[string]*OutPort{}
-}
-func (p *CombinatoricsProcess) InParamPorts() map[string]*InParamPort {
-	return map[string]*InParamPort{}
-}
-func (p *CombinatoricsProcess) OutParamPorts() map[string]*OutParamPort {
-	return map[string]*OutParamPort{
-		p.A.Name(): p.A,
-		p.B.Name(): p.B,
-		p.C.Name(): p.C,
-	}
-}
-
-func (p *CombinatoricsProcess) Run() {
-	defer p.A.Close()
-	defer p.B.Close()
-	defer p.C.Close()
-
-	for _, a := range []string{"a1", "a2", "a3"} {
-		for _, b := range []string{"b1", "b2", "b3"} {
-			for _, c := range []string{"c1", "c2", "c3"} {
-				p.A.Send(a)
-				p.B.Send(b)
-				p.C.Send(c)
-			}
-		}
-	}
-}
-
-func (p *CombinatoricsProcess) Name() string {
-	return p.name
-}
-
-func (p *CombinatoricsProcess) Ready() bool { return true }
-
-// --------------------------------------------------------------------------------
 // MapToTag helper process
 // --------------------------------------------------------------------------------
 
@@ -140,7 +73,7 @@ func (p *MapToTags) In() *InPort   { return p.InPort("in") }
 func (p *MapToTags) Out() *OutPort { return p.OutPort("out") }
 
 func (p *MapToTags) Run() {
-	defer p.CloseAllOutPorts()
+	defer p.CloseOutPorts()
 	for ip := range p.In().Chan {
 		newTags := p.mapFunc(ip)
 		ip.AddTags(newTags)
@@ -176,46 +109,13 @@ func (p *FileSource) Out() *OutPort { return p.OutPort("out") }
 
 // Run runs the FileSource process
 func (p *FileSource) Run() {
-	defer p.CloseAllOutPorts()
+	defer p.CloseOutPorts()
 	for _, filePath := range p.filePaths {
 		newIP, err := NewFileIP(filePath)
 		if err != nil {
 			p.Fail(err)
 		}
 		p.Out().Send(newIP)
-	}
-}
-
-// --------------------------------------------------------------------------------
-// ParamSource helper process
-// --------------------------------------------------------------------------------
-
-// ParamSource will feed parameters on an out-port
-type ParamSource struct {
-	BaseProcess
-	params []string
-}
-
-// NewParamSource returns a new ParamSource
-func NewParamSource(wf *Workflow, name string, params ...string) *ParamSource {
-	p := &ParamSource{
-		BaseProcess: NewBaseProcess(wf, name),
-		params:      params,
-	}
-	p.InitOutParamPort(p, "out")
-	wf.AddProc(p)
-	return p
-}
-
-// Out returns the out-port, on which parameters the process was initialized
-// with, will be retrieved.
-func (p *ParamSource) Out() *OutParamPort { return p.OutParamPort("out") }
-
-// Run runs the process
-func (p *ParamSource) Run() {
-	defer p.CloseAllOutPorts()
-	for _, param := range p.params {
-		p.Out().Send(param)
 	}
 }
 
