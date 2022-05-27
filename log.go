@@ -11,7 +11,7 @@ import (
 
 var (
 	// Trace is a log handler for extremely detailed level logs. It is so far
-	// sparely used in scipipe.
+	// sparely used in flowbase.
 	Trace *log.Logger
 	// Debug is a log handler for debugging level logs
 	Debug *log.Logger

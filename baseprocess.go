@@ -3,7 +3,7 @@ package flowbase
 import "fmt"
 
 // BaseProcess provides a skeleton for processes, such as the main Process
-// component, and the custom components in the scipipe/components library
+// component, and the custom components in the flowbase/components library
 type BaseProcess struct {
 	name     string
 	workflow *Network

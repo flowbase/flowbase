@@ -14,7 +14,7 @@ import (
 // Network
 // ----------------------------------------------------------------------------
 
-// Network is the centerpiece of the functionality in SciPipe, and is a
+// Network is the centerpiece of the functionality in FlowBase, and is a
 // container for a pipeline of processes making up a workflow. It has various
 // methods for coordination the execution of the pipeline as a whole, such as
 // keeping track of the maxiumum number of concurrent tasks, as well as helper
@@ -59,7 +59,7 @@ func NewNetwork(name string, maxConcurrentTasks int) *Network {
 	// Set up logging
 	allowedCharsPtrn := regexp.MustCompile("[^a-z0-9_]")
 	wfNameNormalized := allowedCharsPtrn.ReplaceAllString(strings.ToLower(name), "-")
-	net.logFile = "log/scipipe-" + time.Now().Format("20060102-150405") + "-" + wfNameNormalized + ".log"
+	net.logFile = "log/flowbase-" + time.Now().Format("20060102-150405") + "-" + wfNameNormalized + ".log"
 	InitLogAuditToFile(net.logFile)
 
 	return net
