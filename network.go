@@ -53,8 +53,7 @@ type Node interface {
 // Factory function(s)
 // ----------------------------------------------------------------------------
 
-// NewNetwork returns a new Network
-func NewNetworkWithLogging(name string, maxConcurrentTasks int) *Network {
+func NewNetworkWithFileLogging(name string, maxConcurrentTasks int) *Network {
 	net := NewNetworkWithMaxTasks(name, maxConcurrentTasks)
 
 	// Set up logging
@@ -77,6 +76,7 @@ func NewNetworkWithCustomLogFile(name string, maxConcurrentTasks int, logFile st
 }
 
 func NewNetwork(name string) *Network {
+	InitLogError()
 	return NewNetworkWithMaxTasks(name, runtime.NumCPU())
 }
 

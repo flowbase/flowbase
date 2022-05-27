@@ -8,7 +8,7 @@ import (
 
 func main() {
 	// Init network
-	net := fb.NewNetworkWithLogging("net", 4)
+	net := fb.NewNetwork("net")
 
 	// Init processes
 	sc := NewStringCreator(net, "string-creator")
