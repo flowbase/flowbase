@@ -53,8 +53,8 @@ type Node interface {
 // ----------------------------------------------------------------------------
 
 // NewNetwork returns a new Network
-func NewNetwork(name string, maxConcurrentTasks int) *Network {
-	net := newNetworkWithoutLogging(name, maxConcurrentTasks)
+func NewNetworkWithLogging(name string, maxConcurrentTasks int) *Network {
+	net := NewNetwork(name, maxConcurrentTasks)
 
 	// Set up logging
 	allowedCharsPtrn := regexp.MustCompile("[^a-z0-9_]")
@@ -66,8 +66,8 @@ func NewNetwork(name string, maxConcurrentTasks int) *Network {
 }
 
 // NewNetworkCustomLogFile returns a new Network, with
-func NewNetworkCustomLogFile(name string, maxConcurrentTasks int, logFile string) *Network {
-	net := newNetworkWithoutLogging(name, maxConcurrentTasks)
+func NewNetworkWithCustomLogFile(name string, maxConcurrentTasks int, logFile string) *Network {
+	net := NewNetwork(name, maxConcurrentTasks)
 
 	net.logFile = logFile
 	InitLogAuditToFile(logFile)
@@ -75,7 +75,7 @@ func NewNetworkCustomLogFile(name string, maxConcurrentTasks int, logFile string
 	return net
 }
 
-func newNetworkWithoutLogging(name string, maxConcurrentTasks int) *Network {
+func NewNetwork(name string, maxConcurrentTasks int) *Network {
 	net := &Network{
 		name:            name,
 		procs:           map[string]Node{},
