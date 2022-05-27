@@ -54,8 +54,8 @@ func ExamplePrintProcesses() {
 
 func TestNetworkWithPortObjects(t *testing.T) {
 	net := NewNetwork()
-	rs := NewRandomSender()
-	sp := NewStringPrinter()
+	rs := NewRandomSender("rs")
+	sp := NewStringPrinter("sp")
 	sp.InStrings.From(rs.OutRandomStrings)
 	net.AddNodes(rs, sp)
 	net.Run()
@@ -66,15 +66,16 @@ func TestNetworkWithPortObjects(t *testing.T) {
 // --------------------------------
 
 type RandomSender struct {
+	name             string
 	OutRandomStrings *OutPort[string]
 }
 
-func NewRandomSender() *RandomSender {
-	return &RandomSender{NewOutPort[string]("random-strings")}
+func NewRandomSender(name string) *RandomSender {
+	return &RandomSender{name, NewOutPort[string]("random-strings")}
 }
 
 func (n *RandomSender) Name() string {
-	return "random-sender"
+	return n.name
 }
 
 func (n *RandomSender) Ready() bool {
@@ -89,15 +90,16 @@ func (n *RandomSender) Run() {
 }
 
 type StringPrinter struct {
+	name      string
 	InStrings *InPort[string]
 }
 
-func NewStringPrinter() *StringPrinter {
-	return &StringPrinter{NewInPort[string]("strings")}
+func NewStringPrinter(name string) *StringPrinter {
+	return &StringPrinter{name, NewInPort[string]("strings")}
 }
 
 func (n *StringPrinter) Name() string {
-	return "string-printer"
+	return n.name
 }
 
 func (n *StringPrinter) Ready() bool {
@@ -105,7 +107,7 @@ func (n *StringPrinter) Ready() bool {
 }
 
 func (n *StringPrinter) Run() {
-	for str := range n.InStrings.Chan {
+	for str := range n.InStrings.Chan() {
 		fmt.Println(str)
 	}
 }

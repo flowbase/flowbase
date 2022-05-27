@@ -9,11 +9,22 @@ import (
 // InPort
 // --------------------------------------------------------------------------------
 
+type IInPort interface {
+	Name() string
+	AddRemotePort(IOutPort)
+	Chan() chan any
+}
+
+type IOutPort interface {
+	Name() string
+	AddRemotePort(IInPort)
+}
+
 // InPort represents a pluggable connection to multiple out-ports from other
 // nodes, from its own process, and with which it is communicating via
 // channels under the hood
 type InPort[T any] struct {
-	Chan        chan T
+	channel     chan T
 	name        string
 	process     Node
 	RemotePorts map[string]*OutPort[T]
@@ -26,7 +37,7 @@ func NewInPort[T any](name string) *InPort[T] {
 	inp := &InPort[T]{
 		name:        name,
 		RemotePorts: map[string]*OutPort[T]{},
-		Chan:        make(chan T, 16), // This one will contain merged inputs from inChans
+		channel:     make(chan T, 16), // This one will contain merged inputs from inChans
 		ready:       false,
 	}
 	return inp
@@ -82,12 +93,16 @@ func (pt *InPort[T]) Ready() bool {
 // Send sends IPs to the in-port, and is supposed to be called from the remote
 // (out-) port, to send to this in-port
 func (pt *InPort[T]) Send(ip T) {
-	pt.Chan <- ip
+	pt.Chan() <- ip
 }
 
 // Recv receives IPs from the port
 func (pt *InPort[T]) Recv() T {
-	return <-pt.Chan
+	return <-pt.Chan()
+}
+
+func (pt *InPort[T]) Chan() chan T {
+	return pt.channel
 }
 
 // CloseConnection closes the connection to the remote out-port with name
@@ -96,7 +111,7 @@ func (pt *InPort[T]) CloseConnection(rptName string) {
 	pt.closeLock.Lock()
 	delete(pt.RemotePorts, rptName)
 	if len(pt.RemotePorts) == 0 {
-		close(pt.Chan)
+		close(pt.Chan())
 	}
 	pt.closeLock.Unlock()
 }
