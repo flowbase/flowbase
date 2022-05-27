@@ -34,14 +34,18 @@ flowbase new-component MyComponentName
 Code examples
 -------------
 
-For a real-world example, see [this code](https://github.com/rdfio/rdf2smw/blob/e7e2b3/main.go#L100-L125) defining an app to transform from semantic RDF data to wiki pages in MediaWiki XML format (the network connection code is highlighted, to help you find the interesting parts quick :) ).
+For a real-world example, see [this code](https://github.com/rdfio/rdf2smw/blob/e7e2b3/main.go#L100-L125)
+defining an app to transform from semantic RDF data to wiki pages in MediaWiki
+XML format (the network connection code is highlighted, to help you find the
+interesting parts quick :) ).
+
 
 Libraries based on FlowBase
 ---------------------------
 
-- [SciPipe](http://scipipe.org) - A Scientific Workflow engine library
 - [RDF2SMW](https://github.com/samuell/rdf2smw) - A tool to convert RDF triples
   to a Semantic MediaWiki XML import file
+- [SciPipe](http://scipipe.org) - A Scientific Workflow engine library (actually not formally built on FlowBase any more)
 
 References
 ----------
@@ -53,7 +57,8 @@ References
 Other Go FBP frameworks
 -----------------------
 
-- [GoFlow](https://github.com/trustmaster/goflow) - The true and original Go FBP framework
+- [GoFBP](https://github.com/jpaulm/gofbp) - FBP framework by FBP inventor, following the original FBP principles closely
+- [GoFlow](https://github.com/trustmaster/goflow) - The first production grade Go FBP framework
 - [Cascades](https://github.com/cascades-fbp/cascades)
 
 Even more Go FBP (like) frameworks
