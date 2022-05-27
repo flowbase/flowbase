@@ -7,6 +7,8 @@ import "fmt"
 type Node interface {
 	Name() string
 	Ready() bool
+	InPorts() map[string]IInPort
+	OutPorts() map[string]IOutPort
 	Run()
 }
 

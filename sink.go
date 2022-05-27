@@ -1,80 +1,41 @@
 package flowbase
 
+// Sink is a simple component that just receives IPs on its In-port without
+// doing anything with them. It is used to drive pipelines of processes
 type Sink struct {
-	Node
-	inPorts []chan interface{}
+	BaseProcess
 }
 
-// Instantiate a Sink component
-func NewSink() *Sink {
-	return &Sink{
-		inPorts: []chan interface{}{},
+// NewSink returns a new Sink component
+func NewSink(net *Network, name string) *Sink {
+	p := &Sink{
+		BaseProcess: NewBaseProcess(net, name),
 	}
+	p.AddInPort(p, NewInPort[any]("sink_ink"))
+	return p
 }
 
-func (node *Sink) Connect(ch chan interface{}) {
-	node.inPorts = append(node.inPorts, ch)
+func (p *Sink) in() *InPort { return p.InPort("sink_in") }
+
+// From connects an out-port to the sinks in-port
+func (p *Sink) From(outPort *OutPort) {
+	p.in().From(outPort)
 }
 
-// Execute the Sink component
-func (node *Sink) Run() {
-	ok := true
-	Debug.Printf("Length of inPorts: %d\n", len(node.inPorts))
-	for len(node.inPorts) > 0 {
-		for i, ich := range node.inPorts {
-			select {
-			case _, ok = <-ich:
-				Debug.Printf("Received on in-port %d in sink\n", i)
-				if !ok {
-					Debug.Printf("Port on  %d not ok, in sink\n", i)
-					node.deleteInPortAtKey(i)
-					continue
-				}
-			default:
+// Run runs the Sink process
+func (p *Sink) Run() {
+	merged := make(chan int)
+	if p.in().Ready() {
+		go func() {
+			for ip := range p.in().Chan {
+				Debug.Printf("Got file in sink: %s\n", ip.Path())
 			}
-		}
+			merged <- 1
+		}()
 	}
-}
-
-func (node *Sink) deleteInPortAtKey(i int) {
-	Debug.Println("Deleting inport at key", i, "in sink")
-	node.inPorts = append(node.inPorts[:i], node.inPorts[i+1:]...)
-}
-
-type SinkString struct {
-	Node
-	inPorts []chan string
-}
-
-// Instantiate a SinkString component
-func NewSinkString() (s *SinkString) {
-	return &SinkString{
-		inPorts: []chan string{},
+	if p.in().Ready() {
+		<-merged
 	}
-}
-
-func (node *SinkString) Connect(ch chan string) {
-	node.inPorts = append(node.inPorts, ch)
-}
-
-// Execute the SinkString component
-func (node *SinkString) Run() {
-	for len(node.inPorts) > 0 {
-		for i, ich := range node.inPorts {
-			select {
-			case str, ok := <-ich:
-				Debug.Printf("Received string in sink: %s\n", str)
-				if !ok {
-					Debug.Println("Port was not ok!")
-					node.deleteInPortAtKey(i)
-					continue
-				}
-			default:
-			}
-		}
-	}
-}
-
-func (node *SinkString) deleteInPortAtKey(i int) {
-	node.inPorts = append(node.inPorts[:i], node.inPorts[i+1:]...)
+	close(merged)
+	Debug.Printf("Caught up everything in sink")
 }

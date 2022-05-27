@@ -11,17 +11,23 @@ import (
 
 type IInPort interface {
 	Name() string
+	RemotePorts() map[string]IOutPort
 	AddRemotePort(IOutPort)
 	Chan() chan any
+	Node() Node
 	SetNode(Node)
 	Ready() bool
+	Disconnect(string)
 }
 
 type IOutPort interface {
 	Name() string
+	RemotePorts() map[string]IInPort
 	AddRemotePort(IInPort)
+	Node() Node
 	SetNode(Node)
 	Ready() bool
+	Disconnect(string)
 	Close()
 }
 
