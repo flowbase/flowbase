@@ -66,6 +66,23 @@ func (p *BaseProcess) OutPorts() map[string]IOutPort {
 	return p.outPorts
 }
 
+// AddOutPort adds the in-port port to the process
+func (p *BaseProcess) AddOutPort(node Node, outPort IOutPort) {
+	if _, ok := p.outPorts[outPort.Name()]; ok {
+		p.Failf("Such an in-port ('%s') already exists. Please check your workflow code!", outPort.Name())
+	}
+	outPort.SetNode(node)
+	p.outPorts[outPort.Name()] = outPort
+}
+
+// DeleteOutPort deletes a OutPort object from the process
+func (p *BaseProcess) DeleteOutPort(portName string) {
+	if _, ok := p.outPorts[portName]; !ok {
+		p.Failf("No such out-port ('%s'). Please check your workflow code!", portName)
+	}
+	delete(p.outPorts, portName)
+}
+
 func (p *BaseProcess) receiveOnInPorts() (ips map[string]any, inPortsOpen bool) {
 	inPortsOpen = true
 	ips = make(map[string]any)
@@ -79,6 +96,31 @@ func (p *BaseProcess) receiveOnInPorts() (ips map[string]any, inPortsOpen bool) 
 		ips[inpName] = ip
 	}
 	return
+}
+
+// Ready checks whether all the process' ports are connected
+func (p *BaseProcess) Ready() (isReady bool) {
+	isReady = true
+	for portName, port := range p.inPorts {
+		if !port.Ready() {
+			p.Failf("InPort (%s) is not connected - check your workflow code!", portName)
+			isReady = false
+		}
+	}
+	for portName, port := range p.outPorts {
+		if !port.Ready() {
+			p.Failf("OutPort (%s) is not connected - check your workflow code!", portName)
+			isReady = false
+		}
+	}
+	return isReady
+}
+
+// CloseOutPorts closes all (normal) out-ports
+func (p *BaseProcess) CloseOutPorts() {
+	for _, p := range p.OutPorts() {
+		p.Close()
+	}
 }
 
 // Failf fails with a message that includes the process name

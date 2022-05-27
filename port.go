@@ -14,11 +14,15 @@ type IInPort interface {
 	AddRemotePort(IOutPort)
 	Chan() chan any
 	SetNode(Node)
+	Ready() bool
 }
 
 type IOutPort interface {
 	Name() string
 	AddRemotePort(IInPort)
+	SetNode(Node)
+	Ready() bool
+	Close()
 }
 
 // InPort represents a pluggable connection to multiple out-ports from other
@@ -157,6 +161,10 @@ func NewOutPort[T any](name string) *OutPort[T] {
 
 func (pt *OutPort[T]) Name() string {
 	return pt.name
+}
+
+func (pt *OutPort[T]) SetNode(node Node) {
+	pt.node = node
 }
 
 // AddRemotePort adds a remote InPort to the OutPort
