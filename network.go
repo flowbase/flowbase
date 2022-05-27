@@ -22,11 +22,11 @@ import (
 // workflow on creation
 type Network struct {
 	name              string
-	procs             map[string]NetworkProcess
+	procs             map[string]Node
 	concurrentTasks   chan struct{}
 	concurrentTasksMx sync.Mutex
 	sink              *Sink
-	driver            NetworkProcess
+	driver            Node
 	logFile           string
 	PlotConf          NetworkPlotConf
 }
@@ -37,8 +37,8 @@ type NetworkPlotConf struct {
 	EdgeLabels bool
 }
 
-// NetworkProcess is an interface for processes to be handled by Network
-type NetworkProcess interface {
+// Node is an interface for processes to be handled by Network
+type Node interface {
 	Name() string
 	InPorts() map[string]*InPort
 	OutPorts() map[string]*OutPort
@@ -78,7 +78,7 @@ func NewNetworkCustomLogFile(name string, maxConcurrentTasks int, logFile string
 func newNetworkWithoutLogging(name string, maxConcurrentTasks int) *Network {
 	net := &Network{
 		name:            name,
-		procs:           map[string]NetworkProcess{},
+		procs:           map[string]Node{},
 		concurrentTasks: make(chan struct{}, maxConcurrentTasks),
 		PlotConf:        NetworkPlotConf{EdgeLabels: true},
 	}
@@ -98,7 +98,7 @@ func (net *Network) Name() string {
 }
 
 // Proc returns the process with name procName from the workflow
-func (net *Network) Proc(procName string) NetworkProcess {
+func (net *Network) Proc(procName string) Node {
 	if _, ok := net.procs[procName]; !ok {
 		net.Failf("No process named (%s)", procName)
 	}
@@ -107,14 +107,14 @@ func (net *Network) Proc(procName string) NetworkProcess {
 
 // ProcsSorted returns the processes of the workflow, in an array, sorted by the
 // process names
-func (net *Network) ProcsSorted() []NetworkProcess {
+func (net *Network) ProcsSorted() []Node {
 	keys := []string{}
 	for k := range net.Procs() {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	procs := []NetworkProcess{}
+	procs := []Node{}
 	for _, k := range keys {
 		procs = append(procs, net.Proc(k))
 	}
@@ -122,23 +122,23 @@ func (net *Network) ProcsSorted() []NetworkProcess {
 }
 
 // Procs returns a map of all processes keyed by their names in the workflow
-func (net *Network) Procs() map[string]NetworkProcess {
+func (net *Network) Procs() map[string]Node {
 	return net.procs
 }
 
 // AddProc adds a Process to the workflow, to be run when the workflow runs
-func (net *Network) AddProc(proc NetworkProcess) {
-	if net.procs[proc.Name()] != nil {
-		net.Failf("A process with name (%s) already exists in the workflow! Use a more unique name!", proc.Name())
+func (net *Network) AddProc(node Node) {
+	if net.procs[node.Name()] != nil {
+		net.Failf("A process with name (%s) already exists in the workflow! Use a more unique name!", node.Name())
 	}
-	net.procs[proc.Name()] = proc
+	net.procs[node.Name()] = node
 }
 
 // AddProcs takes one or many Processes and adds them to the workflow, to be run
 // when the workflow runs.
-func (net *Network) AddProcs(procs ...NetworkProcess) {
-	for _, proc := range procs {
-		net.AddProc(proc)
+func (net *Network) AddProcs(procs ...Node) {
+	for _, node := range procs {
+		net.AddProc(node)
 	}
 }
 
@@ -239,7 +239,7 @@ func (net *Network) Run() {
 // RunTo runs all processes upstream of, and including, the process with
 // names provided as arguments
 func (net *Network) RunTo(finalProcNames ...string) {
-	procs := []NetworkProcess{}
+	procs := []Node{}
 	for _, procName := range finalProcNames {
 		procs = append(procs, net.Proc(procName))
 	}
@@ -249,13 +249,13 @@ func (net *Network) RunTo(finalProcNames ...string) {
 // RunToRegex runs all processes upstream of, and including, the process
 // whose name matches any of the provided regexp patterns
 func (net *Network) RunToRegex(procNamePatterns ...string) {
-	procsToRun := []NetworkProcess{}
+	procsToRun := []Node{}
 	for _, pattern := range procNamePatterns {
 		regexpPtrn := regexp.MustCompile(pattern)
-		for procName, proc := range net.Procs() {
+		for procName, node := range net.Procs() {
 			matches := regexpPtrn.MatchString(procName)
 			if matches {
-				procsToRun = append(procsToRun, proc)
+				procsToRun = append(procsToRun, node)
 			}
 		}
 	}
@@ -264,8 +264,8 @@ func (net *Network) RunToRegex(procNamePatterns ...string) {
 
 // RunToProcs runs all processes upstream of, and including, the process strucs
 // provided as arguments
-func (net *Network) RunToProcs(finalProcs ...NetworkProcess) {
-	procsToRun := map[string]NetworkProcess{}
+func (net *Network) RunToProcs(finalProcs ...Node) {
+	procsToRun := map[string]Node{}
 	for _, finalProc := range finalProcs {
 		procsToRun = mergeWFMaps(procsToRun, upstreamProcsForProc(finalProc))
 		procsToRun[finalProc.Name()] = finalProc
@@ -278,16 +278,16 @@ func (net *Network) RunToProcs(finalProcs ...NetworkProcess) {
 // ----------------------------------------------------------------------------
 
 // runProcs runs a specified set of processes only
-func (net *Network) runProcs(procs map[string]NetworkProcess) {
+func (net *Network) runProcs(procs map[string]Node) {
 	net.reconnectDeadEndConnections(procs)
 
 	if !net.readyToRun(procs) {
 		net.Fail("Network not ready to run, due to previously reported errors, so exiting.")
 	}
 
-	for _, proc := range procs {
-		Debug.Printf(net.name+": Starting process (%s) in new go-routine", proc.Name())
-		go proc.Run()
+	for _, node := range procs {
+		Debug.Printf(net.name+": Starting process (%s) in new go-routine", node.Name())
+		go node.Run()
 	}
 
 	Debug.Printf("%s: Starting driver process (%s) in main go-routine", net.name, net.driver.Name())
@@ -296,7 +296,7 @@ func (net *Network) runProcs(procs map[string]NetworkProcess) {
 	net.Auditf("Finished workflow (Log written to %s)", net.logFile)
 }
 
-func (net *Network) readyToRun(procs map[string]NetworkProcess) bool {
+func (net *Network) readyToRun(procs map[string]Node) bool {
 	if len(procs) == 0 {
 		Error.Println(net.name + ": The workflow is empty. Did you forget to add the processes to it?")
 		return false
@@ -305,8 +305,8 @@ func (net *Network) readyToRun(procs map[string]NetworkProcess) bool {
 		Error.Println(net.name + ": sink is nil!")
 		return false
 	}
-	for _, proc := range procs {
-		if !proc.Ready() {
+	for _, node := range procs {
+		if !node.Ready() {
 			Error.Println(net.name + ": Not everything connected. Network shutting down.")
 			return false
 		}
@@ -318,12 +318,12 @@ func (net *Network) readyToRun(procs map[string]NetworkProcess) bool {
 // not in the set of processes to be run, and, if an out-port for a process
 // supposed to be run gets disconnected, its out-port(s) will be connected to
 // the sink instead, to make sure it is properly executed.
-func (net *Network) reconnectDeadEndConnections(procs map[string]NetworkProcess) {
+func (net *Network) reconnectDeadEndConnections(procs map[string]Node) {
 	foundNewDriverProc := false
 
-	for _, proc := range procs {
+	for _, node := range procs {
 		// OutPorts
-		for _, opt := range proc.OutPorts() {
+		for _, opt := range node.OutPorts() {
 			for iptName, ipt := range opt.RemotePorts {
 				// If the remotely connected process is not among the ones to run ...
 				if ipt.Process() == nil {
@@ -340,12 +340,12 @@ func (net *Network) reconnectDeadEndConnections(procs map[string]NetworkProcess)
 			}
 		}
 
-		if len(proc.OutPorts()) == 0 {
+		if len(node.OutPorts()) == 0 {
 			if foundNewDriverProc {
-				net.Failf("Found more than one process without out-ports. Cannot use both as drivers (One of them being '%s'). Adapt your workflow accordingly.", proc.Name())
+				net.Failf("Found more than one process without out-ports. Cannot use both as drivers (One of them being '%s'). Adapt your workflow accordingly.", node.Name())
 			}
 			foundNewDriverProc = true
-			net.driver = proc
+			net.driver = node
 		}
 	}
 
@@ -359,9 +359,9 @@ func (net *Network) reconnectDeadEndConnections(procs map[string]NetworkProcess)
 
 // upstreamProcsForProc returns all processes it is connected to, either
 // directly or indirectly, via its in-ports and param-in-ports
-func upstreamProcsForProc(proc NetworkProcess) map[string]NetworkProcess {
-	procs := map[string]NetworkProcess{}
-	for _, inp := range proc.InPorts() {
+func upstreamProcsForProc(node Node) map[string]Node {
+	procs := map[string]Node{}
+	for _, inp := range node.InPorts() {
 		for _, rpt := range inp.RemotePorts {
 			procs[rpt.Process().Name()] = rpt.Process()
 			mergeWFMaps(procs, upstreamProcsForProc(rpt.Process()))
@@ -370,7 +370,7 @@ func upstreamProcsForProc(proc NetworkProcess) map[string]NetworkProcess {
 	return procs
 }
 
-func mergeWFMaps(a map[string]NetworkProcess, b map[string]NetworkProcess) map[string]NetworkProcess {
+func mergeWFMaps(a map[string]Node, b map[string]Node) map[string]Node {
 	for k, v := range b {
 		a[k] = v
 	}

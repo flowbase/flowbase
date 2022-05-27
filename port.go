@@ -15,7 +15,7 @@ import (
 type InPort struct {
 	Chan        chan *FileIP
 	name        string
-	process     NetworkProcess
+	process     Node
 	RemotePorts map[string]*OutPort
 	ready       bool
 	closeLock   sync.Mutex
@@ -38,7 +38,7 @@ func (pt *InPort) Name() string {
 }
 
 // Process returns the process connected to the port
-func (pt *InPort) Process() NetworkProcess {
+func (pt *InPort) Process() Node {
 	if pt.process == nil {
 		pt.Fail("No connected process!")
 	}
@@ -46,7 +46,7 @@ func (pt *InPort) Process() NetworkProcess {
 }
 
 // SetProcess sets the process of the port to p
-func (pt *InPort) SetProcess(p NetworkProcess) {
+func (pt *InPort) SetProcess(p Node) {
 	pt.process = p
 }
 
@@ -134,7 +134,7 @@ func (pt *InPort) Fail(msg interface{}) {
 // channels under the hood
 type OutPort struct {
 	name        string
-	process     NetworkProcess
+	process     Node
 	RemotePorts map[string]*InPort
 	ready       bool
 }
@@ -155,7 +155,7 @@ func (pt *OutPort) Name() string {
 }
 
 // Process returns the process connected to the port
-func (pt *OutPort) Process() NetworkProcess {
+func (pt *OutPort) Process() Node {
 	if pt.process == nil {
 		pt.Fail("No connected process!")
 	}
@@ -163,7 +163,7 @@ func (pt *OutPort) Process() NetworkProcess {
 }
 
 // SetProcess sets the process of the port to p
-func (pt *OutPort) SetProcess(p NetworkProcess) {
+func (pt *OutPort) SetProcess(p Node) {
 	pt.process = p
 }
 

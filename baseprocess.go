@@ -45,12 +45,12 @@ func (p *BaseProcess) InPort(portName string) *InPort {
 }
 
 // InitInPort adds the in-port port to the process, with name portName
-func (p *BaseProcess) InitInPort(proc NetworkProcess, portName string) {
+func (p *BaseProcess) InitInPort(node Node, portName string) {
 	if _, ok := p.inPorts[portName]; ok {
 		p.Failf("Such an in-port ('%s') already exists. Please check your workflow code!", portName)
 	}
 	ipt := NewInPort(portName)
-	ipt.process = proc
+	ipt.process = node
 	p.inPorts[portName] = ipt
 }
 
@@ -73,12 +73,12 @@ func (p *BaseProcess) DeleteInPort(portName string) {
 // ------------------------------------------------
 
 // InitOutPort adds the out-port port to the process, with name portName
-func (p *BaseProcess) InitOutPort(proc NetworkProcess, portName string) {
+func (p *BaseProcess) InitOutPort(node Node, portName string) {
 	if _, ok := p.outPorts[portName]; ok {
 		p.Failf("Such an out-port ('%s') already exists. Please check your workflow code!", portName)
 	}
 	opt := NewOutPort(portName)
-	opt.process = proc
+	opt.process = node
 	p.outPorts[portName] = opt
 }
 
