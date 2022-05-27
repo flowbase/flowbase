@@ -41,6 +41,15 @@ func (p *BaseProcess) InPort(portName string) any {
 	return p.inPorts[portName]
 }
 
+// InitInPort adds the in-port port to the process, with name portName
+func (p *BaseProcess) AddInPort(node Node, inPort IInPort) {
+	if _, ok := p.inPorts[inPort.Name()]; ok {
+		p.Failf("Such an in-port ('%s') already exists. Please check your workflow code!", inPort.Name())
+	}
+	inPort.SetNode(node)
+	p.inPorts[inPort.Name()] = inPort
+}
+
 func (p *BaseProcess) InPorts() map[string]IInPort {
 	return p.inPorts
 }

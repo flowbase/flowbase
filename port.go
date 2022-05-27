@@ -13,6 +13,7 @@ type IInPort interface {
 	Name() string
 	AddRemotePort(IOutPort)
 	Chan() chan any
+	SetNode(Node)
 }
 
 type IOutPort interface {
@@ -26,7 +27,7 @@ type IOutPort interface {
 type InPort[T any] struct {
 	channel     chan T
 	name        string
-	process     Node
+	node        Node
 	RemotePorts map[string]*OutPort[T]
 	ready       bool
 	closeLock   sync.Mutex
@@ -45,6 +46,10 @@ func NewInPort[T any](name string) *InPort[T] {
 
 func (pt *InPort[T]) Name() string {
 	return pt.name
+}
+
+func (pt *InPort[T]) SetNode(node Node) {
+	pt.node = node
 }
 
 // AddRemotePort adds a remote OutPort to the InPort
@@ -135,7 +140,7 @@ func (pt *InPort[T]) Fail(msg interface{}) {
 // channels under the hood
 type OutPort[T any] struct {
 	name        string
-	process     Node
+	node        Node
 	RemotePorts map[string]*InPort[T]
 	ready       bool
 }
