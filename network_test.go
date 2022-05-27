@@ -13,7 +13,7 @@ func TestAddNodes(t *t.T) {
 
 	proc1 := NewBogusProcess()
 	proc2 := NewBogusProcess()
-	pipeline := NewNet()
+	pipeline := NewNetwork()
 	pipeline.AddNodes(proc1, proc2)
 
 	assert.EqualValues(t, len(pipeline.nodes), 2)
@@ -22,11 +22,11 @@ func TestAddNodes(t *t.T) {
 	assert.IsType(t, &BogusProcess{}, pipeline.nodes[1], "Process 2 was not of the right type!")
 }
 
-func TestRunProcessesInNet(t *t.T) {
+func TestRunProcessesInNetwork(t *t.T) {
 	proc1 := NewBogusProcess()
 	proc2 := NewBogusProcess()
 
-	pipeline := NewNet()
+	pipeline := NewNetwork()
 	pipeline.AddNodes(proc1, proc2)
 	pipeline.Run()
 
@@ -42,7 +42,7 @@ func ExamplePrintProcesses() {
 	proc1 := NewBogusProcess()
 	proc2 := NewBogusProcess()
 
-	pipeline := NewNet()
+	pipeline := NewNetwork()
 	pipeline.AddNodes(proc1, proc2)
 	pipeline.Run()
 
@@ -53,7 +53,7 @@ func ExamplePrintProcesses() {
 }
 
 func TestNetworkWithPortObjects(t *testing.T) {
-	net := NewNet()
+	net := NewNetwork()
 	rs := NewRandomSender()
 	sp := NewStringPrinter()
 	sp.InStrings.From(rs.OutRandomStrings)

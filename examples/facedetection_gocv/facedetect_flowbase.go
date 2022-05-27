@@ -29,7 +29,7 @@ func main() {
 	xmlFile := os.Args[2]
 
 	// Initiate network
-	net := flowbase.NewNet()
+	net := flowbase.NewNetwork()
 
 	// Initiate components
 	webcamReader := NewWebcamReader(deviceID)
