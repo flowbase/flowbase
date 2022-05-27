@@ -34,7 +34,7 @@ func NewInPort(name string) *InPort {
 
 // Name returns the name of the InPort
 func (pt *InPort) Name() string {
-	return pt.Process().Name() + "." + pt.name
+	return pt.name
 }
 
 // Process returns the process connected to the port
@@ -151,7 +151,7 @@ func NewOutPort(name string) *OutPort {
 
 // Name returns the name of the OutPort
 func (pt *OutPort) Name() string {
-	return pt.Process().Name() + "." + pt.name
+	return pt.name
 }
 
 // Process returns the process connected to the port
