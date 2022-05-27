@@ -41,7 +41,7 @@ func (p *BaseProcess) InPort(portName string) any {
 	return p.inPorts[portName]
 }
 
-// InitInPort adds the in-port port to the process, with name portName
+// AddInPort adds the in-port port to the process
 func (p *BaseProcess) AddInPort(node Node, inPort IInPort) {
 	if _, ok := p.inPorts[inPort.Name()]; ok {
 		p.Failf("Such an in-port ('%s') already exists. Please check your workflow code!", inPort.Name())
@@ -52,6 +52,14 @@ func (p *BaseProcess) AddInPort(node Node, inPort IInPort) {
 
 func (p *BaseProcess) InPorts() map[string]IInPort {
 	return p.inPorts
+}
+
+// DeleteInPort deletes an InPort object from the process
+func (p *BaseProcess) DeleteInPort(portName string) {
+	if _, ok := p.inPorts[portName]; !ok {
+		p.Failf("No such in-port ('%s'). Please check your workflow code!", portName)
+	}
+	delete(p.inPorts, portName)
 }
 
 func (p *BaseProcess) OutPorts() map[string]IOutPort {
