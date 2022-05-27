@@ -1,6 +1,6 @@
-package scipipe
+package flowbase
 
 const (
-	// Version is the SciPipe version in string format
-	Version = "0.12.0"
+	// Version is the FlowBase version in string format
+	Version = "0.0.1"
 )

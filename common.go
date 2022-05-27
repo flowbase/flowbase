@@ -1,4 +1,4 @@
-package scipipe
+package flowbase
 
 import (
 	"fmt"

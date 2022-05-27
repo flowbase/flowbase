@@ -1,9 +1,4 @@
-// Package scipipe is a library for writing scientific workflows (sometimes
-// also called "pipelines") of shell commands that depend on each other, in the
-// Go programming languages. It was initially designed for problems in
-// cheminformatics and bioinformatics, but should apply equally well to any
-// domain involving complex pipelines of interdependent shell commands.
-package scipipe
+package flowbase
 
 import (
 	"fmt"
@@ -102,14 +97,6 @@ func newWorkflowWithoutLogging(name string, maxConcurrentTasks int) *Workflow {
 // Name returns the name of the workflow
 func (wf *Workflow) Name() string {
 	return wf.name
-}
-
-// NewProc returns a new process based on a commandPattern (See the
-// documentation for scipipe.NewProcess for more details about the pattern) and
-// connects the process to the workflow
-func (wf *Workflow) NewProc(procName string, commandPattern string) *Process {
-	proc := NewProc(wf, procName, commandPattern)
-	return proc
 }
 
 // Proc returns the process with name procName from the workflow
