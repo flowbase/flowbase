@@ -6,16 +6,16 @@ import "fmt"
 // component, and the custom components in the scipipe/components library
 type BaseProcess struct {
 	name     string
-	workflow *Workflow
+	workflow *Network
 	inPorts  map[string]*InPort
 	outPorts map[string]*OutPort
 }
 
 // NewBaseProcess returns a new BaseProcess, connected to the provided workflow,
 // and with the name name
-func NewBaseProcess(wf *Workflow, name string) BaseProcess {
+func NewBaseProcess(net *Network, name string) BaseProcess {
 	return BaseProcess{
-		workflow: wf,
+		workflow: net,
 		name:     name,
 		inPorts:  make(map[string]*InPort),
 		outPorts: make(map[string]*OutPort),
@@ -27,8 +27,8 @@ func (p *BaseProcess) Name() string {
 	return p.name
 }
 
-// Workflow returns the workflow the process is connected to
-func (p *BaseProcess) Workflow() *Workflow {
+// Network returns the workflow the process is connected to
+func (p *BaseProcess) Network() *Network {
 	return p.workflow
 }
 
@@ -45,7 +45,7 @@ func (p *BaseProcess) InPort(portName string) *InPort {
 }
 
 // InitInPort adds the in-port port to the process, with name portName
-func (p *BaseProcess) InitInPort(proc WorkflowProcess, portName string) {
+func (p *BaseProcess) InitInPort(proc NetworkProcess, portName string) {
 	if _, ok := p.inPorts[portName]; ok {
 		p.Failf("Such an in-port ('%s') already exists. Please check your workflow code!", portName)
 	}
@@ -73,7 +73,7 @@ func (p *BaseProcess) DeleteInPort(portName string) {
 // ------------------------------------------------
 
 // InitOutPort adds the out-port port to the process, with name portName
-func (p *BaseProcess) InitOutPort(proc WorkflowProcess, portName string) {
+func (p *BaseProcess) InitOutPort(proc NetworkProcess, portName string) {
 	if _, ok := p.outPorts[portName]; ok {
 		p.Failf("Such an out-port ('%s') already exists. Please check your workflow code!", portName)
 	}

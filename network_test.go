@@ -10,19 +10,19 @@ import (
 
 func TestSetWfName(t *testing.T) {
 	initTestLogs()
-	wf := NewWorkflow("TestWorkflow", 16)
+	net := NewNetwork("TestNetwork", 16)
 
-	expectedWfName := "TestWorkflow"
-	if wf.name != expectedWfName {
-		t.Errorf("Workflow name is wrong, should be %s but is %s\n", wf.name, expectedWfName)
+	expectedWfName := "TestNetwork"
+	if net.name != expectedWfName {
+		t.Errorf("Network name is wrong, should be %s but is %s\n", net.name, expectedWfName)
 	}
 }
 
 func TestMaxConcurrentTasksCapacity(t *testing.T) {
 	initTestLogs()
-	wf := NewWorkflow("TestWorkflow", 16)
+	net := NewNetwork("TestNetwork", 16)
 
-	if cap(wf.concurrentTasks) != 16 {
+	if cap(net.concurrentTasks) != 16 {
 		t.Error("Wrong number of concurrent tasks")
 	}
 }
@@ -30,21 +30,21 @@ func TestMaxConcurrentTasksCapacity(t *testing.T) {
 func TestAddProc(t *testing.T) {
 	initTestLogs()
 
-	wf := NewWorkflow("TestAddProcsWf", 16)
+	net := NewNetwork("TestAddProcsWf", 16)
 
 	proc1 := NewBogusProcess("bogusproc1")
-	wf.AddProc(proc1)
+	net.AddProc(proc1)
 	proc2 := NewBogusProcess("bogusproc2")
-	wf.AddProc(proc2)
+	net.AddProc(proc2)
 
-	if len(wf.procs) != 2 {
+	if len(net.procs) != 2 {
 		t.Error("Wrong number of processes")
 	}
 
-	if !reflect.DeepEqual(reflect.TypeOf(wf.procs["bogusproc1"]), reflect.TypeOf(&BogusProcess{})) {
+	if !reflect.DeepEqual(reflect.TypeOf(net.procs["bogusproc1"]), reflect.TypeOf(&BogusProcess{})) {
 		t.Error("Bogusproc1 was not of the right type!")
 	}
-	if !reflect.DeepEqual(reflect.TypeOf(wf.procs["bogusproc2"]), reflect.TypeOf(&BogusProcess{})) {
+	if !reflect.DeepEqual(reflect.TypeOf(net.procs["bogusproc2"]), reflect.TypeOf(&BogusProcess{})) {
 		t.Error("Bogusproc2 was not of the right type!")
 	}
 }
@@ -58,14 +58,14 @@ type MapToTags struct {
 	mapFunc func(ip *FileIP) map[string]string
 }
 
-func NewMapToTags(wf *Workflow, name string, mapFunc func(ip *FileIP) map[string]string) *MapToTags {
+func NewMapToTags(net *Network, name string, mapFunc func(ip *FileIP) map[string]string) *MapToTags {
 	p := &MapToTags{
-		BaseProcess: NewBaseProcess(wf, name),
+		BaseProcess: NewBaseProcess(net, name),
 		mapFunc:     mapFunc,
 	}
 	p.InitInPort(p, "in")
 	p.InitOutPort(p, "out")
-	wf.AddProc(p)
+	net.AddProc(p)
 	return p
 }
 
@@ -93,13 +93,13 @@ type FileSource struct {
 }
 
 // NewFileSource returns a new initialized FileSource process
-func NewFileSource(wf *Workflow, name string, filePaths ...string) *FileSource {
+func NewFileSource(net *Network, name string, filePaths ...string) *FileSource {
 	p := &FileSource{
-		BaseProcess: NewBaseProcess(wf, name),
+		BaseProcess: NewBaseProcess(net, name),
 		filePaths:   filePaths,
 	}
 	p.InitOutPort(p, "out")
-	wf.AddProc(p)
+	net.AddProc(p)
 	return p
 }
 

@@ -7,9 +7,9 @@ type Sink struct {
 }
 
 // NewSink returns a new Sink component
-func NewSink(wf *Workflow, name string) *Sink {
+func NewSink(net *Network, name string) *Sink {
 	p := &Sink{
-		BaseProcess: NewBaseProcess(wf, name),
+		BaseProcess: NewBaseProcess(net, name),
 	}
 	p.InitInPort(p, "sink_in")
 	return p

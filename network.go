@@ -11,34 +11,34 @@ import (
 )
 
 // ----------------------------------------------------------------------------
-// Workflow
+// Network
 // ----------------------------------------------------------------------------
 
-// Workflow is the centerpiece of the functionality in SciPipe, and is a
+// Network is the centerpiece of the functionality in SciPipe, and is a
 // container for a pipeline of processes making up a workflow. It has various
 // methods for coordination the execution of the pipeline as a whole, such as
 // keeping track of the maxiumum number of concurrent tasks, as well as helper
 // methods for creating new processes, that automatically gets plugged in to the
 // workflow on creation
-type Workflow struct {
+type Network struct {
 	name              string
-	procs             map[string]WorkflowProcess
+	procs             map[string]NetworkProcess
 	concurrentTasks   chan struct{}
 	concurrentTasksMx sync.Mutex
 	sink              *Sink
-	driver            WorkflowProcess
+	driver            NetworkProcess
 	logFile           string
-	PlotConf          WorkflowPlotConf
+	PlotConf          NetworkPlotConf
 }
 
-// WorkflowPlotConf contains configuraiton for plotting the workflow as a graph
+// NetworkPlotConf contains configuraiton for plotting the workflow as a graph
 // with graphviz
-type WorkflowPlotConf struct {
+type NetworkPlotConf struct {
 	EdgeLabels bool
 }
 
-// WorkflowProcess is an interface for processes to be handled by Workflow
-type WorkflowProcess interface {
+// NetworkProcess is an interface for processes to be handled by Network
+type NetworkProcess interface {
 	Name() string
 	InPorts() map[string]*InPort
 	OutPorts() map[string]*OutPort
@@ -52,40 +52,40 @@ type WorkflowProcess interface {
 // Factory function(s)
 // ----------------------------------------------------------------------------
 
-// NewWorkflow returns a new Workflow
-func NewWorkflow(name string, maxConcurrentTasks int) *Workflow {
-	wf := newWorkflowWithoutLogging(name, maxConcurrentTasks)
+// NewNetwork returns a new Network
+func NewNetwork(name string, maxConcurrentTasks int) *Network {
+	net := newNetworkWithoutLogging(name, maxConcurrentTasks)
 
 	// Set up logging
 	allowedCharsPtrn := regexp.MustCompile("[^a-z0-9_]")
 	wfNameNormalized := allowedCharsPtrn.ReplaceAllString(strings.ToLower(name), "-")
-	wf.logFile = "log/scipipe-" + time.Now().Format("20060102-150405") + "-" + wfNameNormalized + ".log"
-	InitLogAuditToFile(wf.logFile)
+	net.logFile = "log/scipipe-" + time.Now().Format("20060102-150405") + "-" + wfNameNormalized + ".log"
+	InitLogAuditToFile(net.logFile)
 
-	return wf
+	return net
 }
 
-// NewWorkflowCustomLogFile returns a new Workflow, with
-func NewWorkflowCustomLogFile(name string, maxConcurrentTasks int, logFile string) *Workflow {
-	wf := newWorkflowWithoutLogging(name, maxConcurrentTasks)
+// NewNetworkCustomLogFile returns a new Network, with
+func NewNetworkCustomLogFile(name string, maxConcurrentTasks int, logFile string) *Network {
+	net := newNetworkWithoutLogging(name, maxConcurrentTasks)
 
-	wf.logFile = logFile
+	net.logFile = logFile
 	InitLogAuditToFile(logFile)
 
-	return wf
+	return net
 }
 
-func newWorkflowWithoutLogging(name string, maxConcurrentTasks int) *Workflow {
-	wf := &Workflow{
+func newNetworkWithoutLogging(name string, maxConcurrentTasks int) *Network {
+	net := &Network{
 		name:            name,
-		procs:           map[string]WorkflowProcess{},
+		procs:           map[string]NetworkProcess{},
 		concurrentTasks: make(chan struct{}, maxConcurrentTasks),
-		PlotConf:        WorkflowPlotConf{EdgeLabels: true},
+		PlotConf:        NetworkPlotConf{EdgeLabels: true},
 	}
-	sink := NewSink(wf, name+"_default_sink")
-	wf.sink = sink
-	wf.driver = sink
-	return wf
+	sink := NewSink(net, name+"_default_sink")
+	net.sink = sink
+	net.driver = sink
+	return net
 }
 
 // ----------------------------------------------------------------------------
@@ -93,115 +93,115 @@ func newWorkflowWithoutLogging(name string, maxConcurrentTasks int) *Workflow {
 // ----------------------------------------------------------------------------
 
 // Name returns the name of the workflow
-func (wf *Workflow) Name() string {
-	return wf.name
+func (net *Network) Name() string {
+	return net.name
 }
 
 // Proc returns the process with name procName from the workflow
-func (wf *Workflow) Proc(procName string) WorkflowProcess {
-	if _, ok := wf.procs[procName]; !ok {
-		wf.Failf("No process named (%s)", procName)
+func (net *Network) Proc(procName string) NetworkProcess {
+	if _, ok := net.procs[procName]; !ok {
+		net.Failf("No process named (%s)", procName)
 	}
-	return wf.procs[procName]
+	return net.procs[procName]
 }
 
 // ProcsSorted returns the processes of the workflow, in an array, sorted by the
 // process names
-func (wf *Workflow) ProcsSorted() []WorkflowProcess {
+func (net *Network) ProcsSorted() []NetworkProcess {
 	keys := []string{}
-	for k := range wf.Procs() {
+	for k := range net.Procs() {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	procs := []WorkflowProcess{}
+	procs := []NetworkProcess{}
 	for _, k := range keys {
-		procs = append(procs, wf.Proc(k))
+		procs = append(procs, net.Proc(k))
 	}
 	return procs
 }
 
 // Procs returns a map of all processes keyed by their names in the workflow
-func (wf *Workflow) Procs() map[string]WorkflowProcess {
-	return wf.procs
+func (net *Network) Procs() map[string]NetworkProcess {
+	return net.procs
 }
 
 // AddProc adds a Process to the workflow, to be run when the workflow runs
-func (wf *Workflow) AddProc(proc WorkflowProcess) {
-	if wf.procs[proc.Name()] != nil {
-		wf.Failf("A process with name (%s) already exists in the workflow! Use a more unique name!", proc.Name())
+func (net *Network) AddProc(proc NetworkProcess) {
+	if net.procs[proc.Name()] != nil {
+		net.Failf("A process with name (%s) already exists in the workflow! Use a more unique name!", proc.Name())
 	}
-	wf.procs[proc.Name()] = proc
+	net.procs[proc.Name()] = proc
 }
 
 // AddProcs takes one or many Processes and adds them to the workflow, to be run
 // when the workflow runs.
-func (wf *Workflow) AddProcs(procs ...WorkflowProcess) {
+func (net *Network) AddProcs(procs ...NetworkProcess) {
 	for _, proc := range procs {
-		wf.AddProc(proc)
+		net.AddProc(proc)
 	}
 }
 
 // Sink returns the sink process of the workflow
-func (wf *Workflow) Sink() *Sink {
-	return wf.sink
+func (net *Network) Sink() *Sink {
+	return net.sink
 }
 
 // SetSink sets the sink of the workflow to the provided sink process
-func (wf *Workflow) SetSink(sink *Sink) {
-	if wf.sink.Ready() {
-		wf.Fail("Trying to replace a sink which is already connected. Are you combining SetSink() with ConnectFinalOutPort()? That is not allowed!")
+func (net *Network) SetSink(sink *Sink) {
+	if net.sink.Ready() {
+		net.Fail("Trying to replace a sink which is already connected. Are you combining SetSink() with ConnectFinalOutPort()? That is not allowed!")
 	}
-	wf.sink = sink
+	net.sink = sink
 }
 
 // IncConcurrentTasks increases the conter for how many concurrent tasks are
 // currently running in the workflow
-func (wf *Workflow) IncConcurrentTasks(slots int) {
+func (net *Network) IncConcurrentTasks(slots int) {
 	// We must lock so that multiple processes don't end up with partially "filled slots"
-	wf.concurrentTasksMx.Lock()
+	net.concurrentTasksMx.Lock()
 	for i := 0; i < slots; i++ {
-		wf.concurrentTasks <- struct{}{}
+		net.concurrentTasks <- struct{}{}
 		Debug.Println("Increased concurrent tasks")
 	}
-	wf.concurrentTasksMx.Unlock()
+	net.concurrentTasksMx.Unlock()
 }
 
 // DecConcurrentTasks decreases the conter for how many concurrent tasks are
 // currently running in the workflow
-func (wf *Workflow) DecConcurrentTasks(slots int) {
+func (net *Network) DecConcurrentTasks(slots int) {
 	for i := 0; i < slots; i++ {
-		<-wf.concurrentTasks
+		<-net.concurrentTasks
 		Debug.Println("Decreased concurrent tasks")
 	}
 }
 
 // PlotGraph writes the workflow structure to a dot file
-func (wf *Workflow) PlotGraph(filePath string) {
-	dot := wf.DotGraph()
+func (net *Network) PlotGraph(filePath string) {
+	dot := net.DotGraph()
 	createDirs(filePath)
 	dotFile, err := os.Create(filePath)
 	CheckWithMsg(err, "Could not create dot file "+filePath)
 	_, errDot := dotFile.WriteString(dot)
 	if errDot != nil {
-		wf.Failf("Could not write to DOT-file %s: %s", dotFile.Name(), errDot)
+		net.Failf("Could not write to DOT-file %s: %s", dotFile.Name(), errDot)
 	}
 }
 
 // PlotGraphPDF writes the workflow structure to a dot file, and also runs the
 // graphviz dot command to produce a PDF file (requires graphviz, with the dot
 // command, installed on the system)
-func (wf *Workflow) PlotGraphPDF(filePath string) {
-	wf.PlotGraph(filePath)
+func (net *Network) PlotGraphPDF(filePath string) {
+	net.PlotGraph(filePath)
 	ExecCmd(fmt.Sprintf("dot -Tpdf %s -o %s.pdf", filePath, filePath))
 }
 
 // DotGraph generates a graph description in DOT format
 // (See https://en.wikipedia.org/wiki/DOT_%28graph_description_language%29)
-// If Workflow.PlotConf.EdgeLabels is set to true, a label containing the
+// If Network.PlotConf.EdgeLabels is set to true, a label containing the
 // in-port and out-port to which edges are connected to, will be printed.
-func (wf *Workflow) DotGraph() (dot string) {
-	dot = fmt.Sprintf(`digraph "%s" {`+"\n", wf.Name())
+func (net *Network) DotGraph() (dot string) {
+	dot = fmt.Sprintf(`digraph "%s" {`+"\n", net.Name())
 	dot += `  rankdir=LR;` + "\n"
 	dot += `  graph [fontname="Arial",fontsize=13,color="#384A52",fontcolor="#384A52"];` + "\n"
 	dot += `  node  [fontname="Arial",fontsize=11,color="#384A52",fontcolor="#384A52",fillcolor="#EFF2F5",shape=box,style=filled];` + "\n"
@@ -209,12 +209,12 @@ func (wf *Workflow) DotGraph() (dot string) {
 
 	con := ""
 	remToDotPtn := regexp.MustCompile(`^.*\.`)
-	for _, p := range wf.ProcsSorted() {
+	for _, p := range net.ProcsSorted() {
 		dot += fmt.Sprintf(`  "%s" [shape=box];`+"\n", p.Name())
 		// File connections
 		for opname, op := range p.OutPorts() {
 			for rpname, rp := range op.RemotePorts {
-				if wf.PlotConf.EdgeLabels {
+				if net.PlotConf.EdgeLabels {
 					con += fmt.Sprintf(`  "%s" -> "%s" [taillabel="%s", headlabel="%s"];`+"\n", op.Process().Name(), rp.Process().Name(), remToDotPtn.ReplaceAllString(opname, ""), remToDotPtn.ReplaceAllString(rpname, ""))
 				} else {
 					con += fmt.Sprintf(`  "%s" -> "%s";`+"\n", op.Process().Name(), rp.Process().Name())
@@ -232,45 +232,45 @@ func (wf *Workflow) DotGraph() (dot string) {
 // ----------------------------------------------------------------------------
 
 // Run runs all the processes of the workflow
-func (wf *Workflow) Run() {
-	wf.runProcs(wf.procs)
+func (net *Network) Run() {
+	net.runProcs(net.procs)
 }
 
 // RunTo runs all processes upstream of, and including, the process with
 // names provided as arguments
-func (wf *Workflow) RunTo(finalProcNames ...string) {
-	procs := []WorkflowProcess{}
+func (net *Network) RunTo(finalProcNames ...string) {
+	procs := []NetworkProcess{}
 	for _, procName := range finalProcNames {
-		procs = append(procs, wf.Proc(procName))
+		procs = append(procs, net.Proc(procName))
 	}
-	wf.RunToProcs(procs...)
+	net.RunToProcs(procs...)
 }
 
 // RunToRegex runs all processes upstream of, and including, the process
 // whose name matches any of the provided regexp patterns
-func (wf *Workflow) RunToRegex(procNamePatterns ...string) {
-	procsToRun := []WorkflowProcess{}
+func (net *Network) RunToRegex(procNamePatterns ...string) {
+	procsToRun := []NetworkProcess{}
 	for _, pattern := range procNamePatterns {
 		regexpPtrn := regexp.MustCompile(pattern)
-		for procName, proc := range wf.Procs() {
+		for procName, proc := range net.Procs() {
 			matches := regexpPtrn.MatchString(procName)
 			if matches {
 				procsToRun = append(procsToRun, proc)
 			}
 		}
 	}
-	wf.RunToProcs(procsToRun...)
+	net.RunToProcs(procsToRun...)
 }
 
 // RunToProcs runs all processes upstream of, and including, the process strucs
 // provided as arguments
-func (wf *Workflow) RunToProcs(finalProcs ...WorkflowProcess) {
-	procsToRun := map[string]WorkflowProcess{}
+func (net *Network) RunToProcs(finalProcs ...NetworkProcess) {
+	procsToRun := map[string]NetworkProcess{}
 	for _, finalProc := range finalProcs {
 		procsToRun = mergeWFMaps(procsToRun, upstreamProcsForProc(finalProc))
 		procsToRun[finalProc.Name()] = finalProc
 	}
-	wf.runProcs(procsToRun)
+	net.runProcs(procsToRun)
 }
 
 // ----------------------------------------------------------------------------
@@ -278,36 +278,36 @@ func (wf *Workflow) RunToProcs(finalProcs ...WorkflowProcess) {
 // ----------------------------------------------------------------------------
 
 // runProcs runs a specified set of processes only
-func (wf *Workflow) runProcs(procs map[string]WorkflowProcess) {
-	wf.reconnectDeadEndConnections(procs)
+func (net *Network) runProcs(procs map[string]NetworkProcess) {
+	net.reconnectDeadEndConnections(procs)
 
-	if !wf.readyToRun(procs) {
-		wf.Fail("Workflow not ready to run, due to previously reported errors, so exiting.")
+	if !net.readyToRun(procs) {
+		net.Fail("Network not ready to run, due to previously reported errors, so exiting.")
 	}
 
 	for _, proc := range procs {
-		Debug.Printf(wf.name+": Starting process (%s) in new go-routine", proc.Name())
+		Debug.Printf(net.name+": Starting process (%s) in new go-routine", proc.Name())
 		go proc.Run()
 	}
 
-	Debug.Printf("%s: Starting driver process (%s) in main go-routine", wf.name, wf.driver.Name())
-	wf.Auditf("Starting workflow (Writing log to %s)", wf.logFile)
-	wf.driver.Run()
-	wf.Auditf("Finished workflow (Log written to %s)", wf.logFile)
+	Debug.Printf("%s: Starting driver process (%s) in main go-routine", net.name, net.driver.Name())
+	net.Auditf("Starting workflow (Writing log to %s)", net.logFile)
+	net.driver.Run()
+	net.Auditf("Finished workflow (Log written to %s)", net.logFile)
 }
 
-func (wf *Workflow) readyToRun(procs map[string]WorkflowProcess) bool {
+func (net *Network) readyToRun(procs map[string]NetworkProcess) bool {
 	if len(procs) == 0 {
-		Error.Println(wf.name + ": The workflow is empty. Did you forget to add the processes to it?")
+		Error.Println(net.name + ": The workflow is empty. Did you forget to add the processes to it?")
 		return false
 	}
-	if wf.sink == nil {
-		Error.Println(wf.name + ": sink is nil!")
+	if net.sink == nil {
+		Error.Println(net.name + ": sink is nil!")
 		return false
 	}
 	for _, proc := range procs {
 		if !proc.Ready() {
-			Error.Println(wf.name + ": Not everything connected. Workflow shutting down.")
+			Error.Println(net.name + ": Not everything connected. Network shutting down.")
 			return false
 		}
 	}
@@ -318,7 +318,7 @@ func (wf *Workflow) readyToRun(procs map[string]WorkflowProcess) bool {
 // not in the set of processes to be run, and, if an out-port for a process
 // supposed to be run gets disconnected, its out-port(s) will be connected to
 // the sink instead, to make sure it is properly executed.
-func (wf *Workflow) reconnectDeadEndConnections(procs map[string]WorkflowProcess) {
+func (net *Network) reconnectDeadEndConnections(procs map[string]NetworkProcess) {
 	foundNewDriverProc := false
 
 	for _, proc := range procs {
@@ -336,16 +336,16 @@ func (wf *Workflow) reconnectDeadEndConnections(procs map[string]WorkflowProcess
 			}
 			if !opt.Ready() {
 				Debug.Printf("Connecting disconnected out-port (%s) of process (%s) to workflow sink", opt.Name(), opt.Process().Name())
-				wf.sink.From(opt)
+				net.sink.From(opt)
 			}
 		}
 
 		if len(proc.OutPorts()) == 0 {
 			if foundNewDriverProc {
-				wf.Failf("Found more than one process without out-ports. Cannot use both as drivers (One of them being '%s'). Adapt your workflow accordingly.", proc.Name())
+				net.Failf("Found more than one process without out-ports. Cannot use both as drivers (One of them being '%s'). Adapt your workflow accordingly.", proc.Name())
 			}
 			foundNewDriverProc = true
-			wf.driver = proc
+			net.driver = proc
 		}
 	}
 
@@ -353,14 +353,14 @@ func (wf *Workflow) reconnectDeadEndConnections(procs map[string]WorkflowProcess
 		// A process can't both be the driver and be included in the main procs
 		// map, so if we have an alerative driver, it should not be in the main
 		// procs map
-		delete(wf.procs, wf.driver.Name())
+		delete(net.procs, net.driver.Name())
 	}
 }
 
 // upstreamProcsForProc returns all processes it is connected to, either
 // directly or indirectly, via its in-ports and param-in-ports
-func upstreamProcsForProc(proc WorkflowProcess) map[string]WorkflowProcess {
-	procs := map[string]WorkflowProcess{}
+func upstreamProcsForProc(proc NetworkProcess) map[string]NetworkProcess {
+	procs := map[string]NetworkProcess{}
 	for _, inp := range proc.InPorts() {
 		for _, rpt := range inp.RemotePorts {
 			procs[rpt.Process().Name()] = rpt.Process()
@@ -370,21 +370,21 @@ func upstreamProcsForProc(proc WorkflowProcess) map[string]WorkflowProcess {
 	return procs
 }
 
-func mergeWFMaps(a map[string]WorkflowProcess, b map[string]WorkflowProcess) map[string]WorkflowProcess {
+func mergeWFMaps(a map[string]NetworkProcess, b map[string]NetworkProcess) map[string]NetworkProcess {
 	for k, v := range b {
 		a[k] = v
 	}
 	return a
 }
 
-func (wf *Workflow) Auditf(msg string, parts ...interface{}) {
-	Audit.Printf("[Workflow:%s] %s\n", wf.Name(), fmt.Sprintf(msg, parts...))
+func (net *Network) Auditf(msg string, parts ...interface{}) {
+	Audit.Printf("[Network:%s] %s\n", net.Name(), fmt.Sprintf(msg, parts...))
 }
 
-func (wf *Workflow) Failf(msg string, parts ...interface{}) {
-	wf.Fail(fmt.Sprintf(msg, parts...))
+func (net *Network) Failf(msg string, parts ...interface{}) {
+	net.Fail(fmt.Sprintf(msg, parts...))
 }
 
-func (wf *Workflow) Fail(msg interface{}) {
-	Failf("[Workflow:%s] %s", wf.Name(), msg)
+func (net *Network) Fail(msg interface{}) {
+	Failf("[Network:%s] %s", net.Name(), msg)
 }
