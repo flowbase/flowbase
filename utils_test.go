@@ -1,25 +1,35 @@
-package flowbase
+package scipipe
 
 import (
-	"errors"
+	"strings"
 	"testing"
 )
 
 func TestExecCmd_EchoFooBar(t *testing.T) {
 	output := ExecCmd("echo foo bar")
-	if output != "foo bar\n" {
+	output = strings.TrimSpace(strings.TrimSuffix(output, "\n"))
+	if output != "foo bar" {
 		t.Errorf("output = %swant: foo bar\n", output)
 	}
 }
 
-func TestCheck_Panics(t *testing.T) {
-	// Recover the panic, and check that the recover "was needed" (r was not
-	// nil)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Error("The code did not panic as it should!")
+func TestRegexPatternMatchesCases(t *testing.T) {
+	r := getShellCommandPlaceHolderRegex()
+	placeHolders := []string{
+		"{i:hej}",
+		"{is:hej}",
+		"{o:hej}",
+		"{o:hej|.txt}",
+		"{os:hej}",
+		"{o:hej|%.txt}",
+		"{i:hej|%.txt}",
+		"{i:hej|join}",
+		"{i:hej|join: }",
+		"{i:hej|join:,}",
+	}
+	for _, ph := range placeHolders {
+		if !r.Match([]byte(ph)) {
+			t.Errorf("Error does not match placeholder: %s\n", ph)
 		}
-	}()
-	err := errors.New("A test-error")
-	Check(err)
+	}
 }
