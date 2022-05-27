@@ -7,7 +7,9 @@ import (
 )
 
 type Network struct {
-	nodes []Node
+	nodes  map[string]Node
+	sink   *Sink
+	driver Node
 }
 
 func NewNetwork() *Network {
@@ -15,7 +17,7 @@ func NewNetwork() *Network {
 }
 
 func (net *Network) AddNode(node Node) {
-	net.nodes = append(net.nodes, node)
+	net.nodes[node.Name()] = node
 }
 
 func (net *Network) AddNodes(nodes ...Node) {
