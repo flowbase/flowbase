@@ -344,7 +344,7 @@ func (net *Network) reconnectDeadEndConnections(procs map[string]Node) {
 
 		if len(node.OutPorts()) == 0 {
 			if foundNewDriverProc {
-				net.Failf("Found more than one process without out-ports. Cannot use both as drivers (One of them being '%s'). Adapt your workflow accordingly.", node.Name())
+				net.Failf("Found more than one process without out-ports. Cannot use both as drivers (One of them being '%s'). Either add some out-ports, or use only a single final process without out-ports.", node.Name())
 			}
 			foundNewDriverProc = true
 			net.driver = node
