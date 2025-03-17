@@ -331,10 +331,7 @@ func (net *Network) reconnectDeadEndConnections(procs map[string]Node) {
 		for _, opt := range node.OutPorts() {
 			for iptName, ipt := range opt.RemotePorts {
 				// If the remotely connected process is not among the ones to run ...
-				if ipt.Process() == nil {
-					Debug.Printf("Disconnecting in-port (%s) from out-port (%s)", ipt.Name(), opt.Name())
-					opt.Disconnect(iptName)
-				} else if _, ok := procs[ipt.Process().Name()]; !ok {
+				if _, ok := procs[ipt.Process().Name()]; !ok || ipt.Process() == nil {
 					Debug.Printf("Disconnecting in-port (%s) from out-port (%s)", ipt.Name(), opt.Name())
 					opt.Disconnect(iptName)
 				}
